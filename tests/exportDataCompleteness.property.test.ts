@@ -9,7 +9,7 @@
 import * as fc from 'fast-check';
 import { ConfigurationManager } from '../src/services/configurationManager';
 import { LocalStorageManager } from '../src/services/localStorage';
-import type { Agent, Workflow, SystemSettings, UsageStatistics } from '../src/types';
+import type { Agent, Workflow, SystemSettings, /* UsageStatistics */ } from '../src/types';
 
 // Mock storage manager that only uses LocalStorage
 class MockStorageManager {

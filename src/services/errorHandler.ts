@@ -391,7 +391,7 @@ export class ErrorHandler {
         // API error recovery
         this.registerRecoveryStrategy('api-retry', {
             canRecover: (error) => error.name.includes('OpenRouter') || error.name.includes('RateLimit'),
-            recover: async (/* error, context */) => {
+            recover: async (/* error, */ context?: ErrorContext) => {
                 try {
                     // Exponential backoff for API errors
                     const delay = Math.min(1000 * Math.pow(2, (context?.additionalData?.retryCount || 0)), 30000);
@@ -407,7 +407,7 @@ export class ErrorHandler {
         // Agent error recovery
         this.registerRecoveryStrategy('agent-restart', {
             canRecover: (error) => error.name.includes('Agent'),
-            recover: async (/* error, context */) => {
+            recover: async (/* error, */ context?: ErrorContext) => {
                 try {
                     // This would involve restarting the agent
                     await this.logInfo('Attempting agent recovery', ErrorCategory.AGENT, context);

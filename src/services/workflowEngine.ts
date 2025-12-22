@@ -404,7 +404,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     private async executeNode(node: WorkflowNode, context: ExecutionContext): Promise<any> {
         switch (node.type) {
             case 'input':
-                return this.executeInputNode(node, context);
+                return this.executeInputNode(node);
 
             case 'process':
                 return this.executeProcessNode(node, context);

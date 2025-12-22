@@ -75,7 +75,7 @@ export class MonitoringIntegrationExample {
                 const success = !error;
 
                 // Record metrics
-                this.statisticsService.recordTaskExecution(taskId, executionTime, success);
+                this.statisticsService.recordTaskExecution(executionTime, success);
                 this.performanceMonitor.recordTaskExecution(executionTime, success);
             }
 
@@ -139,7 +139,6 @@ export class MonitoringIntegrationExample {
                 const nodeTypes = workflow?.nodes.map(n => n.type) || [];
 
                 this.statisticsService.recordWorkflowExecution(
-                    workflowId,
                     executionTime,
                     true,
                     nodeTypes
@@ -149,7 +148,6 @@ export class MonitoringIntegrationExample {
                 const nodeTypes = workflow?.nodes.map(n => n.type) || [];
 
                 this.statisticsService.recordWorkflowExecution(
-                    workflowId,
                     executionTime,
                     false,
                     nodeTypes

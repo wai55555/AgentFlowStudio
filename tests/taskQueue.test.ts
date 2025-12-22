@@ -5,7 +5,7 @@
 import { TaskQueueEngine, TaskQueueError } from '../src/services/taskQueue';
 import { UnifiedStorageManager } from '../src/services/storageManager';
 import { AgentManager } from '../src/services/agentManager';
-import { Task, TaskStatus } from '../src/types/task';
+import { Task, /* TaskStatus */ } from '../src/types/task';
 
 // Mock storage manager
 const mockStorageManager = {

@@ -142,7 +142,7 @@ export class PerformanceMonitor {
     private listeners: Array<(metrics: PerformanceMetrics) => void> = [];
     private taskExecutionTimes: number[] = [];
     private apiCallTimes: Array<{ timestamp: Date; duration: number; success: boolean }> = [];
-    private sessionStart: Date;
+    private /* sessionStart: Date; */ sessionStart: Date;
 
     constructor() {
         this.startTime = new Date();

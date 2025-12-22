@@ -6,7 +6,7 @@
 
 import { ConfigurationManager, ConfigurationManagerError } from '../src/services/configurationManager';
 import { LocalStorageManager } from '../src/services/localStorage';
-import type { Agent, Workflow, SystemSettings, UsageStatistics } from '../src/types';
+import type { Agent, Workflow, SystemSettings, /* UsageStatistics */ } from '../src/types';
 import type { ConfigurationData } from '../src/services/configurationManager';
 
 // Mock storage manager that only uses LocalStorage

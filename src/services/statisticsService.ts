@@ -179,8 +179,8 @@ export class StatisticsService {
         // For now, we'll poll the services for their current state
 
         // Monitor performance metrics
-        this.performanceMonitor.subscribe((metrics: PerformanceMetrics) => {
-            this.updateFromPerformanceMetrics(metrics);
+        this.performanceMonitor.subscribe((/* metrics: PerformanceMetrics */) => {
+            this.updateFromPerformanceMetrics();
         });
     }
 
@@ -245,9 +245,17 @@ export class StatisticsService {
                     apiCallsPerMinute: metrics.systemMetrics.apiCallsPerMinute,
                     networkLatency: 0 // Would be calculated from API call metrics
                 },
-                trends: this.calculateTrends(currentStats, this.previousStats),
+                trends: {
+                    tasksTrend: 'stable',
+                    performanceTrend: 'stable',
+                    errorTrend: 'stable',
+                    utilizationTrend: 'stable'
+                }, // Will be calculated after currentStats is defined
                 lastUpdated: new Date()
             };
+
+            // Calculate trends after currentStats is defined
+            currentStats.trends = this.calculateTrends(currentStats, this.previousStats);
 
             this.previousStats = currentStats;
             this.notifyListeners(currentStats);
@@ -370,8 +378,8 @@ export class StatisticsService {
     /**
      * Record task execution for performance monitoring
      */
-    recordTaskExecution(taskId: string, executionTime: number, success: boolean): void {
-        this.performanceMonitor.recordTaskExecution(taskId, executionTime, success);
+    recordTaskExecution(/* taskId: string, */ executionTime: number, success: boolean): void {
+        this.performanceMonitor.recordTaskExecution(executionTime, success);
     }
 
     /**
@@ -384,8 +392,8 @@ export class StatisticsService {
     /**
      * Record workflow execution
      */
-    recordWorkflowExecution(workflowId: string, executionTime: number, success: boolean, nodeTypes: string[]): void {
-        this.performanceMonitor.recordWorkflowExecution(workflowId, executionTime, success, nodeTypes);
+    recordWorkflowExecution(/* workflowId: string, */ executionTime: number, success: boolean, nodeTypes: string[]): void {
+        this.performanceMonitor.recordWorkflowExecution(executionTime, success, nodeTypes);
     }
 
     /**
@@ -519,7 +527,7 @@ export class StatisticsService {
     /**
      * Group array items by a property
      */
-    private groupBy<T>(array: T[], property: keyof T): Array<{ [key: string]: any; count: number }> {
+    private groupBy<T, K extends keyof T>(array: T[], property: K): Array<{ [P in K]: T[K] } & { count: number }> {
         const groups = array.reduce((acc, item) => {
             const key = String(item[property]);
             acc[key] = (acc[key] || 0) + 1;
@@ -529,7 +537,7 @@ export class StatisticsService {
         return Object.entries(groups).map(([key, count]) => ({
             [property]: key,
             count
-        }));
+        } as { [P in K]: T[K] } & { count: number }));
     }
 
     /**

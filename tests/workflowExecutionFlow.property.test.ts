@@ -5,7 +5,7 @@
  */
 
 import * as fc from 'fast-check';
-import { WorkflowEngine, WorkflowEngineError } from '../src/services/workflowEngine';
+import { WorkflowEngine, /* WorkflowEngineError */ } from '../src/services/workflowEngine';
 import { UnifiedStorageManager } from '../src/services/storageManager';
 import { TaskQueueEngine } from '../src/services/taskQueue';
 import { AgentManager } from '../src/services/agentManager';

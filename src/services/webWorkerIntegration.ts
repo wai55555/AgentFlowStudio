@@ -184,7 +184,7 @@ export class WebWorkerIntegration {
 
             // This is a simplified fallback - in a real implementation,
             // you would have a main thread task executor
-            const result = await this.simulateMainThreadExecution(task, agent);
+            const result = await this.simulateMainThreadExecution(task);
 
             await this.taskQueue.completeTask(task.id, result);
             this.agentManager.updateAgentStatus(agent.id, 'idle');
