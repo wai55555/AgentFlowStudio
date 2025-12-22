@@ -135,8 +135,8 @@ export class PerformanceMonitorError extends Error {
 }
 
 export class PerformanceMonitor {
-    private metrics: PerformanceMetrics;
-    private statistics: UsageStatistics;
+    private metrics: PerformanceMetrics = {} as PerformanceMetrics;
+    private statistics: UsageStatistics = {} as UsageStatistics;
     private startTime: Date;
     private updateInterval: number | null = null;
     private listeners: Array<(metrics: PerformanceMetrics) => void> = [];
@@ -249,7 +249,7 @@ export class PerformanceMonitor {
     /**
      * Record task execution metrics
      */
-    recordTaskExecution(taskId: string, executionTime: number, success: boolean): void {
+    recordTaskExecution(/* taskId: string, */ executionTime: number, success: boolean): void {
         this.taskExecutionTimes.push(executionTime);
         this.metrics.taskMetrics.totalExecuted++;
 
@@ -321,7 +321,7 @@ export class PerformanceMonitor {
     /**
      * Record workflow execution metrics
      */
-    recordWorkflowExecution(workflowId: string, executionTime: number, success: boolean, nodeTypes: string[]): void {
+    recordWorkflowExecution(/* workflowId: string, */ executionTime: number, success: boolean, nodeTypes: string[]): void {
         this.statistics.totalStats.totalWorkflowsExecuted++;
 
         // Update workflow success rate
@@ -412,7 +412,7 @@ export class PerformanceMonitor {
         const now = new Date();
 
         // Calculate tasks per minute based on recent activity
-        const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
+        // const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
         const recentTasks = this.taskExecutionTimes.length; // Simplified
         this.metrics.taskMetrics.tasksPerMinute = recentTasks;
 

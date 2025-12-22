@@ -158,20 +158,23 @@ function appReducer(state: AppState, action: AppAction): AppState {
 }
 
 // Service instances (singleton pattern)
-let serviceInstances: {
+let serviceInstances: ServiceInstances | null = null;
+
+// Service instances type
+interface ServiceInstances {
     storageManager: UnifiedStorageManager;
     agentManager: AgentManager;
     taskQueue: TaskQueueEngine;
     workflowEngine: WorkflowEngine;
     configurationManager: ConfigurationManager;
     openRouterClient: OpenRouterClient;
-} | null = null;
+}
 
 // Context interface
 interface AppContextType {
     state: AppState;
     isLoading: boolean;
-    services: typeof serviceInstances | null;
+    services: ServiceInstances | null;
 
     // Agent operations
     createAgent: (config: Parameters<AgentManager['createAgent']>[0]) => Promise<Agent>;
@@ -232,8 +235,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                     const workflowEngine = new WorkflowEngine(storageManager, taskQueue, agentManager);
                     const configurationManager = new ConfigurationManager(storageManager);
                     const openRouterClient = new OpenRouterClient({
-                        apiKey: '', // Will be configured later
-                        baseURL: 'https://openrouter.ai/api/v1'
+                        apiKey: localStorage.getItem('openrouter_api_key') || '', // Read from localStorage
+                        baseUrl: 'https://openrouter.ai/api/v1'
                     });
 
                     serviceInstances = {

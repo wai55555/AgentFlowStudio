@@ -4,7 +4,7 @@
  */
 
 import { ConfigurationManager } from '../services/configurationManager';
-import type { Agent, Workflow, SystemSettings } from '../types';
+// import type { Agent, Workflow, SystemSettings } from '../types';
 
 async function demonstrateConfigurationManagement() {
     const configManager = new ConfigurationManager();
@@ -127,14 +127,14 @@ async function demonstrateErrorHandling() {
         try {
             await configManager.importConfiguration('{ invalid json }');
         } catch (error) {
-            console.log('✓ Caught invalid JSON error:', error.message);
+            console.log('✓ Caught invalid JSON error:', (error as Error).message);
         }
 
         // Try to restore non-existent backup
         try {
             await configManager.restoreFromBackup('non-existent-backup-id');
         } catch (error) {
-            console.log('✓ Caught non-existent backup error:', error.message);
+            console.log('✓ Caught non-existent backup error:', (error as Error).message);
         }
 
         // Try to validate invalid configuration

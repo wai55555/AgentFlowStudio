@@ -416,7 +416,7 @@ export class WorkerPool {
 
         this.healthCheckInterval = window.setInterval(() => {
             // Ping all workers to check if they're responsive
-            this.workers.forEach((workerInfo, workerId) => {
+            this.workers.forEach((workerInfo, /* workerId */) => {
                 if (workerInfo.isReady) {
                     workerInfo.worker.postMessage({ type: 'PING' });
                 }

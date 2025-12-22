@@ -7,7 +7,7 @@ import { PerformanceMonitor, PerformanceMetrics, UsageStatistics } from './perfo
 import { AgentManager } from './agentManager';
 import { TaskQueueEngine } from './taskQueue';
 import { WorkflowEngine } from './workflowEngine';
-import { Agent } from '../types/agent';
+// import { Agent } from '../types/agent';
 import { Task } from '../types/task';
 import { Workflow } from '../types/workflow';
 
@@ -187,7 +187,7 @@ export class StatisticsService {
     /**
      * Update statistics from performance metrics
      */
-    private updateFromPerformanceMetrics(metrics: PerformanceMetrics): void {
+    private updateFromPerformanceMetrics(/* metrics: PerformanceMetrics */): void {
         // Update agent metrics
         this.performanceMonitor.updateAgentMetrics(
             this.agentManager.getAllAgents().length,

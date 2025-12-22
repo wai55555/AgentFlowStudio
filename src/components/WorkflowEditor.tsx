@@ -22,7 +22,7 @@ const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
     onCreateWorkflow,
     onUpdateWorkflow,
     onDeleteWorkflow,
-    onExecuteWorkflow,
+    // onExecuteWorkflow,
     onSetActiveWorkflow
 }) => {
     const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(activeWorkflow || null);

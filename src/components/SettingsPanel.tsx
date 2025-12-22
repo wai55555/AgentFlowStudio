@@ -20,6 +20,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         theme: 'light'
     });
 
+    // API Key management state
+    const [apiKey, setApiKey] = useState<string>('');
+    const [showApiKey, setShowApiKey] = useState<boolean>(false);
+    const [apiKeyStatus, setApiKeyStatus] = useState<'none' | 'valid' | 'invalid' | 'checking'>('none');
+
     const [exportData, setExportData] = useState<string>('');
     const [importData, setImportData] = useState<string>('');
     const [showExportModal, setShowExportModal] = useState(false);
@@ -39,6 +44,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 ]);
                 setSettings(loadedSettings);
                 setStorageStats(stats);
+
+                // Load API key from localStorage
+                const storedApiKey = localStorage.getItem('openrouter_api_key');
+                if (storedApiKey) {
+                    setApiKey(storedApiKey);
+                    setApiKeyStatus('valid'); // Assume valid until tested
+                }
             } catch (error) {
                 console.error('Failed to load settings:', error);
             }
@@ -57,10 +69,60 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         try {
             setIsLoading(true);
             await services.storageManager.saveSettings(settings);
+
+            // Save API key to localStorage
+            if (apiKey.trim()) {
+                localStorage.setItem('openrouter_api_key', apiKey.trim());
+                setApiKeyStatus('valid');
+            } else {
+                localStorage.removeItem('openrouter_api_key');
+                setApiKeyStatus('none');
+            }
+
             alert('Settings saved successfully!');
         } catch (error) {
             console.error('Failed to save settings:', error);
             alert('Failed to save settings. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleApiKeyChange = (value: string) => {
+        setApiKey(value);
+        if (value.trim()) {
+            setApiKeyStatus('checking');
+            // Simple validation - check if it looks like an API key
+            if (value.startsWith('sk-') && value.length > 20) {
+                setApiKeyStatus('valid');
+            } else {
+                setApiKeyStatus('invalid');
+            }
+        } else {
+            setApiKeyStatus('none');
+        }
+    };
+
+    const handleTestApiKey = async () => {
+        if (!apiKey.trim() || !services) return;
+
+        try {
+            setIsLoading(true);
+            setApiKeyStatus('checking');
+
+            // Test the API key by checking model availability
+            const isValid = await services.openRouterClient.checkModelAvailability();
+            setApiKeyStatus(isValid ? 'valid' : 'invalid');
+
+            if (isValid) {
+                alert('API key is valid!');
+            } else {
+                alert('API key appears to be invalid or there was a connection issue.');
+            }
+        } catch (error) {
+            console.error('Failed to test API key:', error);
+            setApiKeyStatus('invalid');
+            alert('Failed to test API key. Please check your key and try again.');
         } finally {
             setIsLoading(false);
         }
@@ -174,6 +236,61 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </div>
 
                 <div className="settings-content">
+                    {/* API Configuration */}
+                    <div className="settings-section">
+                        <h4>API Configuration</h4>
+
+                        <div className="setting-item">
+                            <label>OpenRouter API Key</label>
+                            <div className="api-key-input-group">
+                                <input
+                                    type={showApiKey ? "text" : "password"}
+                                    value={apiKey}
+                                    onChange={(e) => handleApiKeyChange(e.target.value)}
+                                    placeholder="Enter your OpenRouter API key (sk-...)"
+                                    disabled={isLoading}
+                                    className={`api-key-input ${apiKeyStatus}`}
+                                />
+                                <button
+                                    type="button"
+                                    className="toggle-visibility-btn"
+                                    onClick={() => setShowApiKey(!showApiKey)}
+                                    title={showApiKey ? "Hide API key" : "Show API key"}
+                                    disabled={isLoading}
+                                >
+                                    {showApiKey ? "🙈" : "👁️"}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="test-api-key-btn"
+                                    onClick={handleTestApiKey}
+                                    disabled={!apiKey.trim() || isLoading}
+                                    title="Test API key"
+                                >
+                                    {apiKeyStatus === 'checking' ? "⏳" : "🧪"}
+                                </button>
+                            </div>
+                            <div className="api-key-status">
+                                {apiKeyStatus === 'none' && (
+                                    <span className="status-none">⚠️ No API key configured</span>
+                                )}
+                                {apiKeyStatus === 'valid' && (
+                                    <span className="status-valid">✅ API key looks valid</span>
+                                )}
+                                {apiKeyStatus === 'invalid' && (
+                                    <span className="status-invalid">❌ API key appears invalid</span>
+                                )}
+                                {apiKeyStatus === 'checking' && (
+                                    <span className="status-checking">⏳ Checking API key...</span>
+                                )}
+                            </div>
+                            <span className="setting-help">
+                                Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">OpenRouter</a>.
+                                Your key is stored locally in your browser only.
+                            </span>
+                        </div>
+                    </div>
+
                     {/* General Settings */}
                     <div className="settings-section">
                         <h4>General</h4>

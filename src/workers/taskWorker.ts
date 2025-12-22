@@ -53,7 +53,7 @@ class TaskWorker {
     }
 
     private handleMessage(event: MessageEvent<WorkerMessage>): void {
-        const { type, payload, taskId } = event.data;
+        const { type, payload, /* taskId */ } = event.data;
 
         switch (type) {
             case 'EXECUTE_TASK':

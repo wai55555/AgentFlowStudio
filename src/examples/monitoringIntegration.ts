@@ -76,7 +76,7 @@ export class MonitoringIntegrationExample {
 
                 // Record metrics
                 this.statisticsService.recordTaskExecution(taskId, executionTime, success);
-                this.performanceMonitor.recordTaskExecution(taskId, executionTime, success);
+                this.performanceMonitor.recordTaskExecution(executionTime, success);
             }
 
             return originalCompleteTask(taskId, result, error);
@@ -167,10 +167,10 @@ export class MonitoringIntegrationExample {
         // For demonstration purposes, we'll show how to record API metrics
 
         // Example of recording an API call
-        const recordAPICall = (duration: number, success: boolean) => {
-            this.statisticsService.recordAPICall(duration, success);
-            this.performanceMonitor.recordAPICall(duration, success);
-        };
+        // const recordAPICall = (duration: number, success: boolean) => {
+        //     this.statisticsService.recordAPICall(duration, success);
+        //     this.performanceMonitor.recordAPICall(duration, success);
+        // };
 
         // In a real implementation, this would be called from the API client
         // recordAPICall(1500, true); // 1.5 second successful call

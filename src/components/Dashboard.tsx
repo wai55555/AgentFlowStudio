@@ -72,17 +72,17 @@ const Dashboard: React.FC = () => {
         setViewMode(viewMode);
     };
 
-    const handleAgentUpdate = async (agents: typeof state.agents) => {
+    const handleAgentUpdate = async (/* agents: typeof state.agents */) => {
         // This is handled through individual agent operations now
         // The context manages the state updates
     };
 
-    const handleTaskUpdate = async (tasks: typeof state.tasks) => {
+    const handleTaskUpdate = async (/* tasks: typeof state.tasks */) => {
         // This is handled through individual task operations now
         // The context manages the state updates
     };
 
-    const handleWorkflowUpdate = async (workflows: typeof state.workflows) => {
+    const handleWorkflowUpdate = async (/* workflows: typeof state.workflows */) => {
         // This is handled through individual workflow operations now
         // The context manages the state updates
     };

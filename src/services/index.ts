@@ -13,24 +13,7 @@ export { WorkflowEngine, WorkflowEngineError } from './workflowEngine';
 export { WorkerPool, WorkerPoolError } from './workerPool';
 export { WebWorkerIntegration, WebWorkerIntegrationError } from './webWorkerIntegration';
 export { ConfigurationManager, ConfigurationManagerError } from './configurationManager';
-export { ErrorHandler, errorHandler, ErrorLevel, ErrorCategory } from './errorHandler';
-export {
-    withErrorHandling,
-    handleErrors,
-    EnhancedError,
-    EnhancedStorageError,
-    EnhancedAPIError,
-    EnhancedAgentError,
-    EnhancedTaskError,
-    EnhancedWorkflowError,
-    EnhancedWorkerError,
-    enhanceError,
-    handlePromise,
-    withAsyncErrorHandling,
-    handleBatch,
-    ErrorBoundaryHandler,
-    PerformanceMonitor
-} from './errorIntegration';
+export { ErrorHandler as ErrorHandlerClass, errorHandler, ErrorLevel, ErrorCategory } from './errorHandler';
 export { PerformanceMonitor as PerformanceMonitorService, PerformanceMonitorError } from './performanceMonitor';
 export { StatisticsService, StatisticsServiceError } from './statisticsService';
 
@@ -40,7 +23,7 @@ export type { StorageQuota } from './localStorage';
 export type { OpenRouterConfig } from './openRouterClient';
 export type { WorkerMessage, WorkerInfo, WorkerPoolConfig } from './workerPool';
 export type { ConfigurationData, ConfigurationValidationResult, BackupMetadata } from './configurationManager';
-export type { ErrorHandler, ErrorLevel, ErrorCategory, ErrorContext, ErrorLogEntry, UserNotification } from './errorHandler';
+export type { ErrorHandler as ErrorHandlerType, ErrorLevel as ErrorLevelType, ErrorCategory as ErrorCategoryType, ErrorContext, ErrorLogEntry, UserNotification } from './errorHandler';
 export type {
     PerformanceMetrics,
     UsageStatistics,

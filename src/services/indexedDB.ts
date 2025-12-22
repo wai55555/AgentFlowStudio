@@ -266,6 +266,26 @@ export class IndexedDBManager {
     }
 
     /**
+     * Add execution log (alias for saveLog)
+     */
+    async addExecutionLog(log: ExecutionLog): Promise<void> {
+        return this.saveLog(log);
+    }
+
+    /**
+     * Get execution logs (alias for getLogs)
+     */
+    async getExecutionLogs(filter?: {
+        taskId?: string;
+        agentId?: string;
+        level?: ExecutionLog['level'];
+        startDate?: Date;
+        endDate?: Date;
+    }): Promise<ExecutionLog[]> {
+        return this.getLogs(filter);
+    }
+
+    /**
      * Clear old logs (keep only recent ones)
      */
     async clearOldLogs(daysToKeep: number = 30): Promise<void> {

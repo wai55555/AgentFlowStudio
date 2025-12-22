@@ -108,6 +108,24 @@ export class OpenRouterClient implements APIClient {
     }
 
     /**
+     * Update the API key configuration
+     */
+    updateApiKey(apiKey: string): void {
+        this.config.apiKey = apiKey;
+    }
+
+    /**
+     * Get current API key (masked for security)
+     */
+    getApiKeyStatus(): { hasKey: boolean; keyPreview: string } {
+        const hasKey = Boolean(this.config.apiKey);
+        const keyPreview = hasKey
+            ? `${this.config.apiKey.substring(0, 8)}...${this.config.apiKey.slice(-4)}`
+            : '';
+        return { hasKey, keyPreview };
+    }
+
+    /**
      * Check if the configured model is available
      */
     async checkModelAvailability(): Promise<boolean> {

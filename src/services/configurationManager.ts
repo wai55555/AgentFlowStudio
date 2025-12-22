@@ -7,7 +7,7 @@
 import type { Agent } from '../types/agent';
 import type { Workflow } from '../types/workflow';
 import type { SystemSettings, UsageStatistics } from '../types/storage';
-import { UnifiedStorageManager, StorageManagerError } from './storageManager';
+import { UnifiedStorageManager, /* StorageManagerError */ } from './storageManager';
 
 export interface ConfigurationData {
     agents: Agent[];

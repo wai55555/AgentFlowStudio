@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { errorHandler, ErrorCategory, ErrorLevel, ErrorLogEntry, UserNotification } from '../services/errorHandler';
+import { errorHandler, ErrorCategory, /* ErrorLevel, */ ErrorLogEntry, UserNotification } from '../services/errorHandler';
 
 export interface UseErrorHandlerReturn {
     logError: (message: string, category: ErrorCategory, error?: Error) => Promise<void>;

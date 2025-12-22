@@ -6,10 +6,10 @@
 import {
     errorHandler,
     ErrorCategory,
-    withErrorHandling,
-    handleErrors,
-    EnhancedStorageError,
-    PerformanceMonitor
+    // withErrorHandling,
+    // handleErrors,
+    // EnhancedStorageError,
+    // PerformanceMonitor
 } from '../services/errorHandler';
 import { LocalStorageManager } from '../services/localStorage';
 import { Agent } from '../types/agent';
@@ -107,7 +107,7 @@ export class EnhancedLocalStorageManager extends LocalStorageManager {
  * Example service that demonstrates error handling patterns
  */
 export class ExampleService {
-    private storageManager: EnhancedLocalStorageManager;
+    private /* storageManager: EnhancedLocalStorageManager; */ storageManager: EnhancedLocalStorageManager;
 
     constructor() {
         this.storageManager = new EnhancedLocalStorageManager();
@@ -117,14 +117,16 @@ export class ExampleService {
      * Batch operation with error handling
      */
     async processBatchOperations(operations: Array<() => Promise<any>>): Promise<void> {
-        const results = await handleBatch(
-            operations,
-            ErrorCategory.SYSTEM,
-            'processBatchOperations'
-        );
+        // const results = await handleBatch(
+        //     operations,
+        //     ErrorCategory.SYSTEM,
+        //     'processBatchOperations'
+        // );
 
-        const failures = results.filter(r => !r.success);
-        const successes = results.filter(r => r.success);
+        // Simplified implementation
+        const results = await Promise.allSettled(operations.map(op => op()));
+        const failures = results.filter(r => r.status === 'rejected');
+        const successes = results.filter(r => r.status === 'fulfilled');
 
         await errorHandler.logInfo(
             `Batch processing completed: ${successes.length} succeeded, ${failures.length} failed`,
@@ -236,4 +238,4 @@ export async function initializeErrorHandlingExample(): Promise<void> {
 }
 
 // Export for use in other parts of the application
-export { handleBatch } from '../services/errorIntegration';
+// export { handleBatch } from '../services/errorIntegration';

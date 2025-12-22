@@ -9,7 +9,7 @@ import {
     Connection,
     ValidationResult,
     WorkflowEngine as IWorkflowEngine,
-    WorkflowStatus
+    /* WorkflowStatus */
 } from '../types/workflow';
 import { Task } from '../types/task';
 import { UnifiedStorageManager } from './storageManager';
@@ -35,7 +35,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     private workflows: Map<string, Workflow> = new Map();
     private storageManager: UnifiedStorageManager;
     private taskQueue: TaskQueueEngine;
-    private agentManager: AgentManager;
+    private /* agentManager: AgentManager; */ agentManager: AgentManager;
     private executionContexts: Map<string, ExecutionContext> = new Map();
 
     constructor(
@@ -423,7 +423,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     /**
      * Executes an input node
      */
-    private async executeInputNode(node: WorkflowNode, context: ExecutionContext): Promise<any> {
+    private async executeInputNode(node: WorkflowNode, /* context: ExecutionContext */): Promise<any> {
         // Input nodes typically provide initial data
         // For now, return a simple input value
         return {
