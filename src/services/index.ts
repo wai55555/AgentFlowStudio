@@ -16,6 +16,9 @@ export { ConfigurationManager, ConfigurationManagerError } from './configuration
 export { ErrorHandler as ErrorHandlerClass, errorHandler, ErrorLevel, ErrorCategory } from './errorHandler';
 export { PerformanceMonitor as PerformanceMonitorService, PerformanceMonitorError } from './performanceMonitor';
 export { StatisticsService, StatisticsServiceError } from './statisticsService';
+export { CryptoService, CryptoServiceError } from './cryptoService';
+export { SecureStorage, SecureAPIKeyManager, SecureStorageError } from './secureStorage';
+export { InputValidator, ValidationError } from './inputValidation';
 
 export type { ExecutionLog, TaskResult } from './indexedDB';
 export type { SerializationOptions } from './serialization';
@@ -33,3 +36,6 @@ export type {
     RealTimeStats,
     DetailedStatistics
 } from './statisticsService';
+export type { EncryptedData } from './cryptoService';
+export type { SecureStorageOptions } from './secureStorage';
+export type { ValidationRule, ValidationSchema, ValidationResult } from './inputValidation';

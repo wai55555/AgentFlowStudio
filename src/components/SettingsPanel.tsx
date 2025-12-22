@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SystemSettings } from '../types/storage';
 import { useApp } from '../contexts/AppContext';
+import { SecureAPIKeyManager, SecureStorageError } from '../services/secureStorage';
 import './SettingsPanel.css';
 
 interface SettingsPanelProps {
@@ -45,11 +46,27 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 setSettings(loadedSettings);
                 setStorageStats(stats);
 
-                // Load API key from localStorage
-                const storedApiKey = localStorage.getItem('openrouter_api_key');
-                if (storedApiKey) {
-                    setApiKey(storedApiKey);
-                    setApiKeyStatus('valid'); // Assume valid until tested
+                // Load API key status from secure storage
+                const hasApiKey = SecureAPIKeyManager.hasAPIKey();
+                if (hasApiKey) {
+                    const keyPreview = await SecureAPIKeyManager.getAPIKeyPreview();
+                    setApiKey(keyPreview); // Show masked version
+                    setApiKeyStatus('valid');
+                } else {
+                    // Check for legacy plaintext key and migrate
+                    const legacyKey = localStorage.getItem('openrouter_api_key');
+                    if (legacyKey) {
+                        try {
+                            await SecureAPIKeyManager.setAPIKey(legacyKey);
+                            localStorage.removeItem('openrouter_api_key');
+                            setApiKey(await SecureAPIKeyManager.getAPIKeyPreview());
+                            setApiKeyStatus('valid');
+                        } catch (error) {
+                            console.error('Failed to migrate API key:', error);
+                            setApiKey(legacyKey);
+                            setApiKeyStatus('invalid');
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Failed to load settings:', error);
@@ -70,12 +87,26 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             setIsLoading(true);
             await services.storageManager.saveSettings(settings);
 
-            // Save API key to localStorage
-            if (apiKey.trim()) {
-                localStorage.setItem('openrouter_api_key', apiKey.trim());
-                setApiKeyStatus('valid');
-            } else {
-                localStorage.removeItem('openrouter_api_key');
+            // Save API key securely if provided
+            if (apiKey.trim() && !apiKey.includes('*')) { // Don't save masked keys
+                try {
+                    await SecureAPIKeyManager.setAPIKey(apiKey.trim());
+                    // Update OpenRouter client with new key
+                    await services.openRouterClient.updateApiKey(apiKey.trim());
+                    setApiKeyStatus('valid');
+                    // Update display to show masked version
+                    const keyPreview = await SecureAPIKeyManager.getAPIKeyPreview();
+                    setApiKey(keyPreview);
+                } catch (error) {
+                    console.error('Failed to save API key securely:', error);
+                    setApiKeyStatus('invalid');
+                    if (error instanceof SecureStorageError) {
+                        alert(`Failed to save API key: ${error.message}`);
+                        return;
+                    }
+                }
+            } else if (!apiKey.trim()) {
+                SecureAPIKeyManager.removeAPIKey();
                 setApiKeyStatus('none');
             }
 
@@ -90,25 +121,33 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
     const handleApiKeyChange = (value: string) => {
         setApiKey(value);
-        if (value.trim()) {
+        if (value.trim() && !value.includes('*')) { // Don't validate masked keys
             setApiKeyStatus('checking');
             // Simple validation - check if it looks like an API key
-            if (value.startsWith('sk-') && value.length > 20) {
+            if (value.length >= 20) {
                 setApiKeyStatus('valid');
             } else {
                 setApiKeyStatus('invalid');
             }
-        } else {
+        } else if (!value.trim()) {
             setApiKeyStatus('none');
         }
     };
 
     const handleTestApiKey = async () => {
-        if (!apiKey.trim() || !services) return;
+        if (!services) return;
 
         try {
             setIsLoading(true);
             setApiKeyStatus('checking');
+
+            // If we have a masked key, we need to test the stored key
+            const hasStoredKey = SecureAPIKeyManager.hasAPIKey();
+            if (!hasStoredKey && (!apiKey.trim() || apiKey.includes('*'))) {
+                setApiKeyStatus('none');
+                alert('Please enter a valid API key first.');
+                return;
+            }
 
             // Test the API key by checking model availability
             const isValid = await services.openRouterClient.checkModelAvailability();
