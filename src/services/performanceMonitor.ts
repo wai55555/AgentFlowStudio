@@ -142,11 +142,11 @@ export class PerformanceMonitor {
     private listeners: Array<(metrics: PerformanceMetrics) => void> = [];
     private taskExecutionTimes: number[] = [];
     private apiCallTimes: Array<{ timestamp: Date; duration: number; success: boolean }> = [];
-    private _sessionStart: Date;
+    // Note: Session start tracking can be added here when needed for session-based metrics
 
     constructor() {
         this.startTime = new Date();
-        this._sessionStart = new Date();
+        // this.__sessionStart = new Date(); // Uncomment when session tracking is implemented
         this.initializeMetrics();
         this.initializeStatistics();
         this.startRealTimeMonitoring();

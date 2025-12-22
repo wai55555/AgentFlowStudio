@@ -35,17 +35,17 @@ export class WorkflowEngine implements IWorkflowEngine {
     private workflows: Map<string, Workflow> = new Map();
     private storageManager: UnifiedStorageManager;
     private taskQueue: TaskQueueEngine;
-    private _agentManager: AgentManager;
+    // Note: Agent manager reference can be added here when needed for agent-workflow integration
     private executionContexts: Map<string, ExecutionContext> = new Map();
 
     constructor(
         storageManager: UnifiedStorageManager,
         taskQueue: TaskQueueEngine,
-        agentManager: AgentManager
+        _agentManager: AgentManager // Keep parameter for future use
     ) {
         this.storageManager = storageManager;
         this.taskQueue = taskQueue;
-        this._agentManager = agentManager;
+        // this.__agentManager = _agentManager; // Uncomment when agent integration is implemented
         this.loadWorkflowsFromStorage();
     }
 
