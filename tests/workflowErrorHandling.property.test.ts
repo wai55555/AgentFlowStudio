@@ -162,7 +162,7 @@ describe('Property Tests: Workflow Error Handling', () => {
                 fc.record({
                     nodeCount: fc.integer({ min: 3, max: 8 }),
                     failureNodeIndex: fc.integer({ min: 1, max: 6 }), // Don't fail on input node (index 0)
-                    failureType: fc.constantFrom('missing_prompt', 'missing_condition', 'task_failure', 'invalid_config')
+                    failureType: fc.constantFrom('missing_prompt', 'missing_condition', 'task_failure', 'invalid_config') as fc.Arbitrary<'missing_prompt' | 'missing_condition' | 'task_failure' | 'invalid_config'>
                 }),
                 async ({ nodeCount, failureNodeIndex, failureType }) => {
                     // Ensure failure node index is within bounds

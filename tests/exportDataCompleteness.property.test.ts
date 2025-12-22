@@ -66,7 +66,7 @@ const agentArb = fc.record({
     name: fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0),
     role: fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0),
     promptTemplate: fc.string({ minLength: 1, maxLength: 500 }).filter(s => s.trim().length > 0),
-    status: fc.constantFrom('idle', 'busy', 'error'),
+    status: fc.constantFrom('idle', 'busy', 'error') as fc.Arbitrary<'idle' | 'busy' | 'error'>,
     config: agentConfigArb,
     stats: agentStatsArb
 });
@@ -77,10 +77,14 @@ const positionArb = fc.record({
 });
 
 const nodeConfigArb = fc.record({
-    prompt: fc.option(fc.string({ maxLength: 500 })),
-    condition: fc.option(fc.string({ maxLength: 200 })),
-    agentRole: fc.option(fc.string({ maxLength: 100 }))
-});
+    prompt: fc.string({ maxLength: 500 }),
+    condition: fc.string({ maxLength: 200 }),
+    agentRole: fc.string({ maxLength: 100 })
+}).map(config => ({
+    prompt: config.prompt || undefined,
+    condition: config.condition || undefined,
+    agentRole: config.agentRole || undefined
+}));
 
 const connectionArb = fc.record({
     sourceNodeId: fc.string({ minLength: 1, maxLength: 50 }),
@@ -91,7 +95,7 @@ const connectionArb = fc.record({
 
 const workflowNodeArb = fc.record({
     id: fc.string({ minLength: 1, maxLength: 50 }),
-    type: fc.constantFrom('input', 'process', 'output', 'condition'),
+    type: fc.constantFrom('input', 'process', 'output', 'condition') as fc.Arbitrary<'input' | 'process' | 'output' | 'condition'>,
     position: positionArb,
     config: nodeConfigArb,
     inputs: fc.array(connectionArb, { maxLength: 5 }),
@@ -103,7 +107,7 @@ const workflowArb = fc.record({
     name: fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0),
     nodes: fc.array(workflowNodeArb, { maxLength: 10 }),
     connections: fc.array(connectionArb, { maxLength: 20 }),
-    status: fc.constantFrom('draft', 'running', 'completed', 'failed')
+    status: fc.constantFrom('draft', 'running', 'completed', 'failed') as fc.Arbitrary<'draft' | 'running' | 'completed' | 'failed'>
 });
 
 const systemSettingsArb = fc.record({
@@ -111,7 +115,7 @@ const systemSettingsArb = fc.record({
     defaultModel: fc.constant('xiaomi/mimo-v2-flash:free'),
     apiTimeout: fc.integer({ min: 1000, max: 120000 }),
     autoSaveInterval: fc.integer({ min: 10000, max: 300000 }),
-    theme: fc.constantFrom('light', 'dark')
+    theme: fc.constantFrom('light', 'dark') as fc.Arbitrary<'light' | 'dark'>
 });
 
 const usageStatsArb = fc.record({

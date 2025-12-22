@@ -56,7 +56,7 @@ describe('Property Tests: Task Queue Ordering', () => {
                         // Generate timestamps with some variation to test timestamp ordering
                         timestampOffset: fc.integer({ min: 0, max: 10000 }) // milliseconds offset
                     }),
-                    { minLength: 2, max: 20 }
+                    { minLength: 2, maxLength: 20 }
                 ),
                 async (taskSpecs) => {
                     // Create tasks with the generated specifications

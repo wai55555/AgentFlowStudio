@@ -24,7 +24,7 @@ describe('Storage Layer', () => {
         test('should handle Date objects correctly', () => {
             const testData = { date: new Date('2023-01-01') };
             const serialized = DataSerializer.serialize(testData);
-            const deserialized = DataSerializer.deserialize(serialized);
+            const deserialized = DataSerializer.deserialize(serialized) as { date: Date };
 
             expect(deserialized.date).toEqual(testData.date);
         });
@@ -36,7 +36,7 @@ describe('Storage Layer', () => {
             };
 
             const serialized = DataSerializer.serialize(testData);
-            const deserialized = DataSerializer.deserialize(serialized);
+            const deserialized = DataSerializer.deserialize(serialized) as { map: Map<string, string>; set: Set<number> };
 
             expect(deserialized.map).toEqual(testData.map);
             expect(deserialized.set).toEqual(testData.set);

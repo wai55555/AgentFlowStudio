@@ -5,11 +5,7 @@
 
 import {
     errorHandler,
-    ErrorCategory,
-    // withErrorHandling,
-    // handleErrors,
-    // EnhancedStorageError,
-    // PerformanceMonitor
+    ErrorCategory
 } from '../services/errorHandler';
 import { LocalStorageManager } from '../services/localStorage';
 import { Agent } from '../types/agent';
@@ -22,50 +18,54 @@ export class EnhancedLocalStorageManager extends LocalStorageManager {
     /**
      * Save agents with enhanced error handling and performance monitoring
      */
-    @handleErrors(ErrorCategory.STORAGE, 'saveAgents')
     async saveAgents(agents: Agent[]): Promise<void> {
-        return PerformanceMonitor.measureAsync(
-            'saveAgents',
-            ErrorCategory.STORAGE,
-            async () => {
-                await super.saveAgents(agents);
+        try {
+            await super.saveAgents(agents);
 
-                // Log successful operation
-                await errorHandler.logInfo(
-                    `Successfully saved ${agents.length} agents to storage`,
-                    ErrorCategory.STORAGE,
-                    {
-                        operation: 'saveAgents',
-                        additionalData: { agentCount: agents.length }
-                    }
-                );
-            },
-            5000 // 5 second threshold
-        );
+            // Log successful operation
+            await errorHandler.logInfo(
+                `Successfully saved ${agents.length} agents to storage`,
+                ErrorCategory.STORAGE,
+                {
+                    operation: 'saveAgents',
+                    additionalData: { agentCount: agents.length }
+                }
+            );
+        } catch (error) {
+            await errorHandler.handleError(
+                error instanceof Error ? error : new Error(String(error)),
+                ErrorCategory.STORAGE,
+                { operation: 'saveAgents' }
+            );
+            throw error;
+        }
     }
 
     /**
      * Load agents with error handling and fallback
      */
     async loadAgentsWithFallback(): Promise<Agent[]> {
-        return withErrorHandling(
-            async () => {
-                const agents = this.loadAgents();
+        try {
+            const agents = this.loadAgents();
 
-                await errorHandler.logInfo(
-                    `Successfully loaded ${agents.length} agents from storage`,
-                    ErrorCategory.STORAGE,
-                    {
-                        operation: 'loadAgents',
-                        additionalData: { agentCount: agents.length }
-                    }
-                );
+            await errorHandler.logInfo(
+                `Successfully loaded ${agents.length} agents from storage`,
+                ErrorCategory.STORAGE,
+                {
+                    operation: 'loadAgents',
+                    additionalData: { agentCount: agents.length }
+                }
+            );
 
-                return agents;
-            },
-            ErrorCategory.STORAGE,
-            'loadAgents'
-        );
+            return agents;
+        } catch (error) {
+            await errorHandler.handleError(
+                error instanceof Error ? error : new Error(String(error)),
+                ErrorCategory.STORAGE,
+                { operation: 'loadAgents' }
+            );
+            return []; // Return empty array as fallback
+        }
     }
 
     /**
@@ -91,10 +91,8 @@ export class EnhancedLocalStorageManager extends LocalStorageManager {
 
             if (!handled) {
                 // Create user-friendly error notification
-                throw new EnhancedStorageError(
-                    'Failed to export configuration. Please try again.',
-                    'exportConfiguration',
-                    { originalError: error }
+                throw new Error(
+                    'Failed to export configuration. Please try again.'
                 );
             }
 
@@ -107,10 +105,8 @@ export class EnhancedLocalStorageManager extends LocalStorageManager {
  * Example service that demonstrates error handling patterns
  */
 export class ExampleService {
-    private /* storageManager: EnhancedLocalStorageManager; */ storageManager: EnhancedLocalStorageManager;
-
     constructor() {
-        this.storageManager = new EnhancedLocalStorageManager();
+        // Initialize service
     }
 
     /**

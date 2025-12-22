@@ -59,12 +59,12 @@ describe('Property Tests: Agent Uniqueness and Pool Management', () => {
                 // Generate agent configurations
                 fc.array(
                     fc.record({
-                        name: fc.option(fc.string({ minLength: 1, maxLength: 50 })),
-                        role: fc.option(fc.string({ minLength: 1, maxLength: 30 })),
-                        promptTemplate: fc.option(fc.string({ minLength: 1, maxLength: 200 })),
-                        maxTokens: fc.option(fc.integer({ min: 100, max: 4000 })),
-                        temperature: fc.option(fc.float({ min: 0, max: 2 })),
-                        model: fc.option(fc.string({ minLength: 1, maxLength: 50 }))
+                        name: fc.string({ minLength: 1, maxLength: 50 }),
+                        role: fc.string({ minLength: 1, maxLength: 30 }),
+                        promptTemplate: fc.string({ minLength: 1, maxLength: 200 }),
+                        maxTokens: fc.integer({ min: 100, max: 4000 }),
+                        temperature: fc.float({ min: 0, max: 2 }),
+                        model: fc.string({ minLength: 1, maxLength: 50 })
                     }),
                     { minLength: 1, maxLength: 20 }
                 ),

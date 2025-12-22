@@ -35,7 +35,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     private workflows: Map<string, Workflow> = new Map();
     private storageManager: UnifiedStorageManager;
     private taskQueue: TaskQueueEngine;
-    private /* agentManager: AgentManager; */ agentManager: AgentManager;
+    private _agentManager: AgentManager;
     private executionContexts: Map<string, ExecutionContext> = new Map();
 
     constructor(
@@ -45,7 +45,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     ) {
         this.storageManager = storageManager;
         this.taskQueue = taskQueue;
-        this.agentManager = agentManager;
+        this._agentManager = agentManager;
         this.loadWorkflowsFromStorage();
     }
 

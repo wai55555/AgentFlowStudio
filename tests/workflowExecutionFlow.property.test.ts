@@ -86,7 +86,7 @@ function createLinearWorkflow(nodeCount: number): { nodes: WorkflowNode[], conne
             position: { x: i * 100, y: 0 },
             config: {
                 prompt: nodeType === 'process' ? `Process step ${i}` : undefined,
-                condition: nodeType === 'condition' ? 'true' : undefined
+                condition: undefined // No condition nodes in this test
             },
             inputs: [],
             outputs: []

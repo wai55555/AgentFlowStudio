@@ -80,8 +80,16 @@ describe('Property Tests: Error Logging Consistency', () => {
                     const testError = new Error(errorMessage);
                     testError.name = errorName;
 
+                    // Convert null values to undefined for ErrorContext compatibility
+                    const errorContext = {
+                        operation: contextData.operation,
+                        agentId: contextData.agentId || undefined,
+                        taskId: contextData.taskId || undefined,
+                        additionalData: contextData.additionalData || undefined
+                    };
+
                     // Log the error
-                    await errorHandler.logError(message, category, testError, contextData, level);
+                    await errorHandler.logError(message, category, testError, errorContext, level);
 
                     // Property: Error should be logged to console with complete details
                     const expectedLogLevel = level === ErrorLevel.INFO ? 'info' :
