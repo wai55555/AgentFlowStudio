@@ -1,0 +1,407 @@
+/**
+ * Keyboard Shortcuts and Command Palette Styles
+ */
+
+/* Command Palette */
+.command-palette {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10vh;
+}
+
+.command-palette-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: fadeIn var(--transition-base);
+}
+
+.command-palette-content {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    background: var(--background-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: slideInDown var(--transition-base);
+    margin: 0 var(--spacing-md);
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.command-palette-header {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--background-primary);
+}
+
+.command-palette-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: var(--font-size-lg);
+    padding: var(--spacing-sm) 0;
+    outline: none;
+    color: var(--text-primary);
+}
+
+.command-palette-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.command-palette-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+    margin-left: var(--spacing-md);
+}
+
+.command-palette-close:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.command-palette-results {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: var(--spacing-sm) 0;
+}
+
+.command-category {
+    margin-bottom: var(--spacing-md);
+}
+
+.command-category h3 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin: 0;
+    background: var(--background-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.command-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    border-left: 3px solid transparent;
+}
+
+.command-item:hover {
+    background: var(--background-primary);
+    border-left-color: var(--secondary-color);
+}
+
+.command-description {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.command-shortcut {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    background: var(--border-color);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+}
+
+/* Shortcuts Help Modal */
+.shortcuts-help-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+}
+
+.shortcuts-help-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: fadeIn var(--transition-base);
+}
+
+.shortcuts-help-content {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    max-height: 80vh;
+    background: var(--background-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: scaleIn var(--transition-base);
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.shortcuts-help-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--background-primary);
+}
+
+.shortcuts-help-header h2 {
+    margin: 0;
+    font-size: var(--font-size-2xl);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.shortcuts-help-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-2xl);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+}
+
+.shortcuts-help-close:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.shortcuts-help-body {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    max-height: calc(80vh - 100px);
+}
+
+.shortcuts-category {
+    margin-bottom: var(--spacing-xl);
+}
+
+.shortcuts-category:last-child {
+    margin-bottom: 0;
+}
+
+.shortcuts-category h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-md) 0;
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.shortcuts-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background: var(--background-primary);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+}
+
+.shortcut-item:hover {
+    background: var(--border-color);
+    transform: translateX(4px);
+}
+
+.shortcut-description {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.shortcut-keys {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+kbd {
+    background: var(--background-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    min-width: 24px;
+    text-align: center;
+}
+
+/* Keyboard Focus Styles */
+.keyboard-focus {
+    outline: 2px solid var(--secondary-color) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2) !important;
+}
+
+/* Focus trap for modals */
+.modal-focus-trap {
+    position: relative;
+}
+
+.modal-focus-trap::before,
+.modal-focus-trap::after {
+    content: '';
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+
+    .command-palette-content,
+    .shortcuts-help-content {
+        margin: var(--spacing-sm);
+        max-width: none;
+    }
+
+    .shortcuts-help-body {
+        padding: var(--spacing-md);
+    }
+
+    .shortcuts-list {
+        gap: var(--spacing-xs);
+    }
+
+    .shortcut-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .shortcut-keys {
+        align-self: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .command-palette {
+        padding-top: 5vh;
+    }
+
+    .command-palette-header,
+    .shortcuts-help-header {
+        padding: var(--spacing-md);
+    }
+
+    .command-palette-input {
+        font-size: var(--font-size-base);
+    }
+
+    .shortcuts-help-header h2 {
+        font-size: var(--font-size-xl);
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+
+    .command-palette-content,
+    .shortcuts-help-content {
+        border: 2px solid var(--text-primary);
+    }
+
+    .command-item:hover,
+    .shortcut-item:hover {
+        border: 1px solid var(--text-primary);
+    }
+
+    kbd {
+        border-width: 2px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+
+    .command-palette-backdrop,
+    .shortcuts-help-backdrop {
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    kbd {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+}
+
+/* Print styles */
+@media print {
+
+    .command-palette,
+    .shortcuts-help-modal {
+        display: none !important;
+    }
+}

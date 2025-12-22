@@ -1,0 +1,223 @@
+/**
+ * Responsive Container Styles
+ * Provides responsive layout utilities and mobile optimization
+ */
+
+/* Base responsive container */
+.responsive-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transition: all var(--transition-base);
+}
+
+/* Viewport-specific styles */
+.responsive-mobile {
+    --container-padding: var(--spacing-sm);
+    --container-gap: var(--spacing-sm);
+    --font-scale: 0.9;
+}
+
+.responsive-tablet {
+    --container-padding: var(--spacing-md);
+    --container-gap: var(--spacing-md);
+    --font-scale: 1;
+}
+
+.responsive-desktop {
+    --container-padding: var(--spacing-lg);
+    --container-gap: var(--spacing-lg);
+    --font-scale: 1;
+}
+
+/* Orientation-specific styles */
+.responsive-landscape {
+    --layout-direction: row;
+    --content-width: 100%;
+}
+
+.responsive-portrait {
+    --layout-direction: column;
+    --content-width: 100%;
+}
+
+/* Breakpoint-specific visibility */
+.responsive-breakpoint-mobile {
+    display: block;
+}
+
+.responsive-breakpoint-tablet {
+    display: block;
+}
+
+.responsive-breakpoint-desktop {
+    display: block;
+}
+
+/* Hide elements on specific breakpoints */
+@media (min-width: 769px) {
+    .responsive-breakpoint-mobile {
+        display: none;
+    }
+}
+
+@media (max-width: 768px),
+(min-width: 1025px) {
+    .responsive-breakpoint-tablet {
+        display: none;
+    }
+}
+
+@media (max-width: 1024px) {
+    .responsive-breakpoint-desktop {
+        display: none;
+    }
+}
+
+/* Virtualization support */
+.responsive-virtualized {
+    overflow: hidden;
+    contain: layout style paint;
+}
+
+.responsive-virtualized .virtualized-content {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Touch-friendly mobile styles */
+.responsive-mobile .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--spacing-md);
+}
+
+.responsive-mobile .text-input {
+    font-size: 16px;
+    /* Prevents zoom on iOS */
+    padding: var(--spacing-md);
+}
+
+.responsive-mobile .button {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-base);
+}
+
+/* Tablet-specific optimizations */
+.responsive-tablet .grid-layout {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.responsive-tablet .sidebar {
+    width: 280px;
+}
+
+/* Desktop-specific optimizations */
+.responsive-desktop .grid-layout {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.responsive-desktop .sidebar {
+    width: 320px;
+}
+
+/* Performance optimizations */
+.responsive-container * {
+    box-sizing: border-box;
+}
+
+.responsive-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+.responsive-container video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Smooth scrolling for mobile */
+.responsive-mobile .scrollable {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+/* Reduce animations on mobile for performance */
+@media (max-width: 768px) {
+    .responsive-mobile * {
+        animation-duration: 0.2s !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+    .responsive-container {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Print optimizations */
+@media print {
+    .responsive-container {
+        --container-padding: 0;
+        --container-gap: var(--spacing-sm);
+    }
+
+    .responsive-mobile,
+    .responsive-tablet,
+    .responsive-desktop {
+        display: block !important;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .responsive-container * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+@media (prefers-contrast: high) {
+    .responsive-container {
+        border: 1px solid currentColor;
+    }
+}
+
+/* Focus management for keyboard navigation */
+.responsive-container:focus-within {
+    outline: 2px solid var(--secondary-color);
+    outline-offset: 2px;
+}
+
+/* Container queries support (future-proofing) */
+@supports (container-type: inline-size) {
+    .responsive-container {
+        container-type: inline-size;
+    }
+
+    @container (max-width: 768px) {
+        .responsive-container .mobile-only {
+            display: block;
+        }
+
+        .responsive-container .desktop-only {
+            display: none;
+        }
+    }
+
+    @container (min-width: 769px) {
+        .responsive-container .mobile-only {
+            display: none;
+        }
+
+        .responsive-container .desktop-only {
+            display: block;
+        }
+    }
+}

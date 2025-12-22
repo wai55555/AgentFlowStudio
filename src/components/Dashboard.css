@@ -1,0 +1,287 @@
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--background-primary);
+    position: relative;
+}
+
+.dashboard-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    gap: var(--spacing-md);
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e0e0e0;
+    border-top-color: var(--secondary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.dashboard-nav {
+    display: flex;
+    background-color: #34495e;
+    padding: 0;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    z-index: 10;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.dashboard-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-button {
+    flex: 1;
+    min-width: 120px;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: none;
+    border: none;
+    color: #ecf0f1;
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    transition: all var(--transition-base);
+    border-bottom: 3px solid transparent;
+    position: relative;
+    white-space: nowrap;
+}
+
+.nav-button:hover {
+    background-color: #2c3e50;
+    transform: translateY(-1px);
+}
+
+.nav-button:active {
+    transform: translateY(0);
+}
+
+.nav-button.active {
+    background-color: #2c3e50;
+    border-bottom-color: var(--secondary-color);
+    color: white;
+}
+
+.nav-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    animation: slideIn var(--transition-base);
+}
+
+@keyframes slideIn {
+    from {
+        transform: scaleX(0);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
+.nav-icon {
+    font-size: 1.2rem;
+    transition: transform var(--transition-base);
+}
+
+.nav-button:hover .nav-icon {
+    transform: scale(1.1);
+}
+
+.nav-text {
+    font-weight: 500;
+}
+
+.nav-shortcut {
+    font-size: var(--font-size-xs);
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+.dashboard-content {
+    flex: 1;
+    overflow: auto;
+    padding: var(--spacing-xl);
+    animation: fadeInUp var(--transition-slow);
+    min-height: 0;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Skip link styles */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--text-primary);
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    z-index: 10000;
+    transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+    top: 6px;
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 1200px) {
+    .dashboard-content {
+        padding: var(--spacing-lg);
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 0;
+    }
+
+    .nav-button {
+        min-width: 100px;
+        padding: var(--spacing-md);
+        font-size: var(--font-size-sm);
+        gap: var(--spacing-xs);
+    }
+
+    .nav-text {
+        display: none;
+    }
+
+    .nav-shortcut {
+        display: none;
+    }
+
+    .nav-icon {
+        font-size: 1.5rem;
+    }
+
+    .dashboard-content {
+        padding: var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-button {
+        min-width: 80px;
+        padding: var(--spacing-sm) var(--spacing-xs);
+    }
+
+    .nav-icon {
+        font-size: 1.3rem;
+    }
+
+    .dashboard-content {
+        padding: var(--spacing-sm);
+    }
+}
+
+/* Tablet landscape orientation */
+@media (max-width: 1024px) and (orientation: landscape) {
+    .dashboard-nav {
+        padding: 0;
+    }
+
+    .nav-button {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .nav-shortcut {
+        display: none;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+    .nav-icon {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .dashboard {
+        background-color: #1a1a1a;
+    }
+
+    .dashboard-nav {
+        background-color: #2d3748;
+    }
+
+    .nav-button {
+        color: #e2e8f0;
+    }
+
+    .nav-button:hover {
+        background-color: #4a5568;
+    }
+
+    .nav-button.active {
+        background-color: #4a5568;
+    }
+}
+
+/* Loading states for content transitions */
+.dashboard-content.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.dashboard-content.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
