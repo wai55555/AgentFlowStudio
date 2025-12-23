@@ -20,7 +20,7 @@ export { CryptoService, CryptoServiceError } from './cryptoService';
 export { SecureStorage, SecureAPIKeyManager, SecureStorageError } from './secureStorage';
 export { InputValidator, ValidationError } from './inputValidation';
 
-export type { ExecutionLog, TaskResult } from './indexedDB';
+export type { ExecutionLog, TaskResult, DateFilterOptions, LogFilterResult } from './indexedDB';
 export type { SerializationOptions } from './serialization';
 export type { StorageQuota } from './localStorage';
 export type { OpenRouterConfig } from './openRouterClient';

@@ -75,8 +75,9 @@ export class MonitoringIntegrationExample {
                 const success = !error;
 
                 // Record metrics
-                this.statisticsService.recordTaskExecution(executionTime, success);
-                this.performanceMonitor.recordTaskExecution(executionTime, success);
+                const agentId = 'workflow_agent'; // Default agent ID for workflow tasks
+                this.statisticsService.recordTaskExecution(executionTime, success, agentId, 'workflow_task');
+                this.performanceMonitor.recordTaskExecution(executionTime, success, agentId, 'workflow_task');
             }
 
             return originalCompleteTask(taskId, result, error);

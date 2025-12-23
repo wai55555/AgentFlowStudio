@@ -89,7 +89,7 @@ export interface DetailedStatistics {
         taskDistribution: {
             byType: Array<{ type: string; count: number }>;
             byStatus: Array<{ status: string; count: number }>;
-            byPriority: Array<{ priority: number; count: number }>;
+            byPriority: Array<{ priority: string; count: number }>;
         };
         executionTimes: {
             fastest: number;
@@ -122,6 +122,13 @@ export interface DetailedStatistics {
         hourlyActivity: Array<{ hour: number; activity: number }>;
         weeklyTrends: Array<{ week: string; tasks: number; success: number; errors: number }>;
     };
+}
+
+export interface TypeSafeGroupBy {
+    <T, K extends keyof T>(
+        array: T[],
+        property: K
+    ): Array<{ [P in K]: string } & { count: number }>;
 }
 
 export class StatisticsServiceError extends Error {
@@ -378,8 +385,8 @@ export class StatisticsService {
     /**
      * Record task execution for performance monitoring
      */
-    recordTaskExecution(/* taskId: string, */ executionTime: number, success: boolean): void {
-        this.performanceMonitor.recordTaskExecution(executionTime, success);
+    recordTaskExecution(executionTime: number, success: boolean, agentId?: string, taskType?: string): void {
+        this.performanceMonitor.recordTaskExecution(executionTime, success, agentId, taskType);
     }
 
     /**
@@ -525,19 +532,22 @@ export class StatisticsService {
     }
 
     /**
-     * Group array items by a property
+     * Group array items by a property with type-safe string conversion
+     * Implements TypeSafeGroupBy interface
      */
-    private groupBy<T, K extends keyof T>(array: T[], property: K): Array<{ [P in K]: T[K] } & { count: number }> {
+    public groupBy<T, K extends keyof T>(array: T[], property: K): Array<{ [P in K]: string } & { count: number }> {
+        // Use Object.create(null) to avoid prototype pollution issues
         const groups = array.reduce((acc, item) => {
             const key = String(item[property]);
-            acc[key] = (acc[key] || 0) + 1;
+            // Use hasOwnProperty to safely check for existing keys
+            acc[key] = (Object.prototype.hasOwnProperty.call(acc, key) ? acc[key] : 0) + 1;
             return acc;
-        }, {} as Record<string, number>);
+        }, Object.create(null) as Record<string, number>);
 
         return Object.entries(groups).map(([key, count]) => ({
             [property]: key,
             count
-        } as { [P in K]: T[K] } & { count: number }));
+        } as { [P in K]: string } & { count: number }));
     }
 
     /**

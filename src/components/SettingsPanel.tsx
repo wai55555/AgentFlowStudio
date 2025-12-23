@@ -4,6 +4,13 @@ import { useApp } from '../contexts/AppContext';
 import { SecureAPIKeyManager, SecureStorageError } from '../services/secureStorage';
 import './SettingsPanel.css';
 
+interface APIKeyTestResult {
+    isValid: boolean;
+    testedKey: string; // マスクされたキー
+    timestamp: Date;
+    errorMessage?: string;
+}
+
 interface SettingsPanelProps {
     isOpen?: boolean;
 }
@@ -134,34 +141,73 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         }
     };
 
-    const handleTestApiKey = async () => {
-        if (!services) return;
+    const handleTestApiKey = async (): Promise<APIKeyTestResult> => {
+        if (!services) {
+            const result: APIKeyTestResult = {
+                isValid: false,
+                testedKey: '',
+                timestamp: new Date(),
+                errorMessage: 'Services not available'
+            };
+            return result;
+        }
 
         try {
             setIsLoading(true);
             setApiKeyStatus('checking');
 
-            // If we have a masked key, we need to test the stored key
-            const hasStoredKey = SecureAPIKeyManager.hasAPIKey();
-            if (!hasStoredKey && (!apiKey.trim() || apiKey.includes('*'))) {
+            // Validate that we have a key to test
+            const keyToTest = apiKey.trim();
+            if (!keyToTest || keyToTest.includes('*')) {
+                const result: APIKeyTestResult = {
+                    isValid: false,
+                    testedKey: keyToTest.includes('*') ? keyToTest : '',
+                    timestamp: new Date(),
+                    errorMessage: 'Please enter a valid API key first.'
+                };
                 setApiKeyStatus('none');
-                alert('Please enter a valid API key first.');
-                return;
+                alert(result.errorMessage);
+                return result;
             }
+
+            // Create a masked version of the key for the result
+            const maskedKey = keyToTest.length > 8
+                ? `${keyToTest.substring(0, 4)}${'*'.repeat(keyToTest.length - 8)}${keyToTest.substring(keyToTest.length - 4)}`
+                : '*'.repeat(keyToTest.length);
+
+            // Update the client configuration with the new key before testing
+            await services.openRouterClient.updateApiKey(keyToTest);
 
             // Test the API key by checking model availability
             const isValid = await services.openRouterClient.checkModelAvailability();
+
+            const result: APIKeyTestResult = {
+                isValid,
+                testedKey: maskedKey,
+                timestamp: new Date(),
+                errorMessage: isValid ? undefined : 'API key appears to be invalid or there was a connection issue.'
+            };
+
             setApiKeyStatus(isValid ? 'valid' : 'invalid');
 
             if (isValid) {
                 alert('API key is valid!');
             } else {
-                alert('API key appears to be invalid or there was a connection issue.');
+                alert(result.errorMessage);
             }
+
+            return result;
         } catch (error) {
             console.error('Failed to test API key:', error);
+            const result: APIKeyTestResult = {
+                isValid: false,
+                testedKey: apiKey.includes('*') ? apiKey : '*'.repeat(Math.min(apiKey.length, 20)),
+                timestamp: new Date(),
+                errorMessage: `Failed to test API key: ${error instanceof Error ? error.message : 'Unknown error'}`
+            };
             setApiKeyStatus('invalid');
-            alert('Failed to test API key. Please check your key and try again.');
+            alert(result.errorMessage);
+            return result;
         } finally {
             setIsLoading(false);
         }
@@ -302,7 +348,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                 <button
                                     type="button"
                                     className="test-api-key-btn"
-                                    onClick={handleTestApiKey}
+                                    onClick={() => handleTestApiKey()}
                                     disabled={!apiKey.trim() || isLoading}
                                     title="Test API key"
                                 >

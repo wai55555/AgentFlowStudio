@@ -22,7 +22,7 @@ describe('OpenRouterClient', () => {
 
     beforeEach(() => {
         client = new OpenRouterClient({
-            apiKey: 'test-api-key',
+            apiKey: 'test-api-key-1234567890abcdef', // 32文字の有効なAPIキー
             rateLimitRpm: 1000, // High rate limit to avoid delays in tests
             maxRetries: 0 // No retries to avoid delays in tests
         });
@@ -32,13 +32,13 @@ describe('OpenRouterClient', () => {
 
     describe('constructor', () => {
         it('should initialize with default configuration', () => {
-            const defaultClient = new OpenRouterClient({ apiKey: 'test' });
+            const defaultClient = new OpenRouterClient({ apiKey: 'test-default-key-1234567890' });
             expect(defaultClient).toBeInstanceOf(OpenRouterClient);
         });
 
         it('should merge custom configuration with defaults', () => {
             const customClient = new OpenRouterClient({
-                apiKey: 'test',
+                apiKey: 'test-custom-key-1234567890',
                 maxRetries: 5,
                 rateLimitRpm: 30
             });
@@ -75,7 +75,7 @@ describe('OpenRouterClient', () => {
                 expect.objectContaining({
                     method: 'POST',
                     headers: expect.objectContaining({
-                        'Authorization': 'Bearer test-api-key',
+                        'Authorization': 'Bearer test-api-key-1234567890abcdef',
                         'Content-Type': 'application/json'
                     })
                 })

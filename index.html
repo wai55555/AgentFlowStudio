@@ -5,19 +5,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Content Security Policy -->
+    <!-- Content Security Policy with nonce-based inline script security -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-eval' 'unsafe-inline';
+        script-src 'self' 'unsafe-eval' 'nonce-cors-warning' 'nonce-service-worker';
         style-src 'self' 'unsafe-inline';
         img-src 'self' data: blob:;
-        font-src 'self' data:;
-        connect-src 'self' https://openrouter.ai https://*.openrouter.ai;
+        font-src 'self' data: https:;
+        connect-src 'self' https: wss: ws:;
         worker-src 'self' blob:;
         object-src 'none';
         base-uri 'self';
         form-action 'self';
-        upgrade-insecure-requests;
     ">
 
     <!-- Security Headers -->
@@ -166,7 +165,7 @@
     </noscript>
 
     <!-- CORS Error Warning for file:// protocol -->
-    <script>
+    <script nonce="cors-warning">
         // Show CORS warning if running from file:// protocol
         if (location.protocol === 'file:') {
             const corsWarning = document.createElement('div');
@@ -226,7 +225,7 @@
     <script type="module" src="./src/main.tsx"></script>
 
     <!-- Service Worker registration (for future PWA support) -->
-    <script>
+    <script nonce="service-worker">
         // Register service worker when available
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', () => {

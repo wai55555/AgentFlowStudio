@@ -10,20 +10,11 @@ export default defineConfig({
         },
     },
     server: {
-        port: 3000,
-        open: true,
+        port: 5174,
+        open: true
     },
     build: {
         outDir: 'dist',
         sourcemap: true,
-    },
-    worker: {
-        format: 'es',
-        plugins: [
-            // Enable TypeScript support in workers
-        ]
-    },
-    optimizeDeps: {
-        exclude: ['src/workers/taskWorker.ts']
     }
 });

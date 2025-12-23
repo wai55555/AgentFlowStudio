@@ -316,8 +316,8 @@ describe('SecureAPIKeyManager', () => {
 
             const result = await SecureAPIKeyManager.getAPIKeyPreview();
 
-            // The test key 'sk-test1234567890' has 18 characters
-            // So it should show: first 4 + (18-8=10 asterisks) + last 4
+            // The test key 'sk-test-api-key-1234567890' has 26 characters
+            // So it should show: first 4 + (26-8=18 asterisks) + last 4
             expect(result).toBe('sk-t******************7890');
         });
 
