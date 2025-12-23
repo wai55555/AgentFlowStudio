@@ -21,6 +21,21 @@ export interface ExecutionLog {
     details?: any;
 }
 
+export interface DateFilterOptions {
+    startDate?: Date;
+    endDate?: Date;
+    taskId?: string;
+    agentId?: string;
+    level?: string;
+    limit?: number;
+}
+
+export interface LogFilterResult {
+    logs: ExecutionLog[];
+    totalCount: number;
+    filteredCount: number;
+}
+
 export interface TaskResult {
     id: string;
     taskId: string;
@@ -45,32 +60,98 @@ export class IndexedDBManager {
     } as const;
 
     /**
-     * Initialize IndexedDB connection
+     * Initialize IndexedDB connection with retry and fallback
      */
     async initialize(): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (!window.indexedDB) {
                 reject(new IndexedDBError('IndexedDB is not supported', 'initialize'));
                 return;
             }
 
-            const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+            // Try to delete and recreate database if it's corrupted
+            const tryInitialize = async (attempt: number = 1): Promise<void> => {
+                try {
+                    const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
 
-            request.onerror = () => {
-                reject(new IndexedDBError(
-                    `Failed to open database: ${request.error?.message || 'Unknown error'}`,
-                    'initialize'
-                ));
+                    request.onerror = async () => {
+                        const errorMessage = request.error?.message || 'Unknown error';
+                        console.warn(`IndexedDB initialization attempt ${attempt} failed:`, errorMessage);
+
+                        if (attempt < 3 && (errorMessage.includes('Internal error') || errorMessage.includes('corrupted'))) {
+                            try {
+                                // Try to delete the corrupted database
+                                console.log('Attempting to delete corrupted database...');
+                                await this.deleteDatabase();
+                                // Retry initialization
+                                setTimeout(() => tryInitialize(attempt + 1), 100);
+                                return;
+                            } catch (deleteError) {
+                                console.warn('Failed to delete corrupted database:', deleteError);
+                            }
+                        }
+
+                        reject(new IndexedDBError(
+                            `Failed to open database after ${attempt} attempts: ${errorMessage}`,
+                            'initialize'
+                        ));
+                    };
+
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        console.log('IndexedDB initialized successfully');
+                        resolve();
+                    };
+
+                    request.onupgradeneeded = (event) => {
+                        try {
+                            const db = (event.target as IDBOpenDBRequest).result;
+                            this.createStores(db);
+                        } catch (error) {
+                            console.error('Error creating stores:', error);
+                            reject(new IndexedDBError(
+                                `Failed to create stores: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                                'initialize'
+                            ));
+                        }
+                    };
+
+                    request.onblocked = () => {
+                        console.warn('IndexedDB upgrade blocked. Please close other tabs.');
+                    };
+
+                } catch (error) {
+                    reject(new IndexedDBError(
+                        `Initialization error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                        'initialize'
+                    ));
+                }
             };
 
-            request.onsuccess = () => {
-                this.db = request.result;
+            await tryInitialize();
+        });
+    }
+
+    /**
+     * Delete the database (for recovery from corruption)
+     */
+    private async deleteDatabase(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const deleteRequest = indexedDB.deleteDatabase(this.DB_NAME);
+
+            deleteRequest.onsuccess = () => {
+                console.log('Database deleted successfully');
                 resolve();
             };
 
-            request.onupgradeneeded = (event) => {
-                const db = (event.target as IDBOpenDBRequest).result;
-                this.createStores(db);
+            deleteRequest.onerror = () => {
+                reject(new Error(`Failed to delete database: ${deleteRequest.error?.message}`));
+            };
+
+            deleteRequest.onblocked = () => {
+                console.warn('Database deletion blocked. Please close other tabs.');
+                // Still resolve as the deletion might succeed eventually
+                setTimeout(resolve, 1000);
             };
         });
     }
@@ -101,6 +182,42 @@ export class IndexedDBManager {
             logStore.createIndex('level', 'level', { unique: false });
             logStore.createIndex('timestamp', 'timestamp', { unique: false });
         }
+    }
+
+    /**
+     * Validate date range parameters
+     */
+    private validateDateRange(startDate?: Date, endDate?: Date): void {
+        if (startDate && !(startDate instanceof Date) || (startDate && isNaN(startDate.getTime()))) {
+            throw new IndexedDBError('Invalid startDate parameter', 'validateDateRange');
+        }
+
+        if (endDate && !(endDate instanceof Date) || (endDate && isNaN(endDate.getTime()))) {
+            throw new IndexedDBError('Invalid endDate parameter', 'validateDateRange');
+        }
+
+        if (startDate && endDate && startDate > endDate) {
+            throw new IndexedDBError('startDate cannot be after endDate', 'validateDateRange');
+        }
+    }
+
+    /**
+     * Filter logs by date range
+     */
+    private filterLogsByDateRange(logs: ExecutionLog[], startDate?: Date, endDate?: Date): ExecutionLog[] {
+        return logs.filter(log => {
+            const logTimestamp = new Date(log.timestamp);
+
+            if (startDate && logTimestamp < startDate) {
+                return false;
+            }
+
+            if (endDate && logTimestamp > endDate) {
+                return false;
+            }
+
+            return true;
+        });
     }
 
     /**
@@ -237,32 +354,90 @@ export class IndexedDBManager {
     }
 
     /**
-     * Get logs with optional filtering
+     * Get logs with optional filtering including date range
      */
-    async getLogs(filter?: {
-        taskId?: string;
-        agentId?: string;
-        level?: string;
-        limit?: number;
-    }): Promise<ExecutionLog[]> {
-        return this.performOperation(
-            this.STORES.EXECUTION_LOGS,
-            (store) => {
-                if (filter?.taskId) {
-                    const index = store.index('taskId');
-                    return index.getAll(filter.taskId);
-                }
-                if (filter?.agentId) {
-                    const index = store.index('agentId');
-                    return index.getAll(filter.agentId);
-                }
-                if (filter?.level) {
-                    const index = store.index('level');
-                    return index.getAll(filter.level);
-                }
-                return store.getAll();
+    async getLogs(filter?: DateFilterOptions): Promise<ExecutionLog[]> {
+        try {
+            // Validate date range if provided
+            if (filter?.startDate || filter?.endDate) {
+                this.validateDateRange(filter.startDate, filter.endDate);
             }
-        );
+
+            const allLogs = await this.performOperation(
+                this.STORES.EXECUTION_LOGS,
+                (store) => {
+                    if (filter?.taskId) {
+                        const index = store.index('taskId');
+                        return index.getAll(filter.taskId);
+                    }
+                    if (filter?.agentId) {
+                        const index = store.index('agentId');
+                        return index.getAll(filter.agentId);
+                    }
+                    if (filter?.level) {
+                        const index = store.index('level');
+                        return index.getAll(filter.level);
+                    }
+                    return store.getAll();
+                }
+            );
+
+            // Apply date filtering if specified
+            let filteredLogs = allLogs;
+            if (filter?.startDate || filter?.endDate) {
+                filteredLogs = this.filterLogsByDateRange(allLogs, filter.startDate, filter.endDate);
+            }
+
+            // Apply limit if specified
+            if (filter?.limit && filter.limit > 0) {
+                filteredLogs = filteredLogs.slice(0, filter.limit);
+            }
+
+            return filteredLogs;
+        } catch (error) {
+            if (error instanceof IndexedDBError) {
+                throw error;
+            }
+            throw new IndexedDBError(
+                `Failed to get logs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                'getLogs'
+            );
+        }
+    }
+
+    /**
+     * Get logs with filtering and result metadata
+     */
+    async getLogsWithMetadata(filter?: DateFilterOptions): Promise<LogFilterResult> {
+        try {
+            // Validate date range if provided
+            if (filter?.startDate || filter?.endDate) {
+                this.validateDateRange(filter.startDate, filter.endDate);
+            }
+
+            // Get total count first
+            const totalCount = await this.performOperation(
+                this.STORES.EXECUTION_LOGS,
+                (store) => store.count()
+            );
+
+            // Get filtered logs
+            const logs = await this.getLogs(filter);
+
+            return {
+                logs,
+                totalCount,
+                filteredCount: logs.length
+            };
+        } catch (error) {
+            if (error instanceof IndexedDBError) {
+                throw error;
+            }
+            throw new IndexedDBError(
+                `Failed to get logs with metadata: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                'getLogsWithMetadata'
+            );
+        }
     }
 
     /**
@@ -275,13 +450,7 @@ export class IndexedDBManager {
     /**
      * Get execution logs (alias for getLogs)
      */
-    async getExecutionLogs(filter?: {
-        taskId?: string;
-        agentId?: string;
-        level?: ExecutionLog['level'];
-        startDate?: Date;
-        endDate?: Date;
-    }): Promise<ExecutionLog[]> {
+    async getExecutionLogs(filter?: DateFilterOptions): Promise<ExecutionLog[]> {
         return this.getLogs(filter);
     }
 

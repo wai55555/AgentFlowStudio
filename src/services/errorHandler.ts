@@ -68,6 +68,7 @@ export interface UserNotification {
 export class ErrorHandler {
     private static instance: ErrorHandler;
     private logStorage: IndexedDBManager;
+    private storageManager?: any; // Add storageManager property
     private recoveryStrategies: Map<string, ErrorRecoveryStrategy> = new Map();
     private notifications: Map<string, UserNotification> = new Map();
     private notificationCallbacks: Array<(notification: UserNotification) => void> = [];
@@ -77,6 +78,13 @@ export class ErrorHandler {
     private constructor() {
         this.logStorage = new IndexedDBManager();
         this.setupDefaultRecoveryStrategies();
+    }
+
+    /**
+     * Set storage manager for recovery strategies
+     */
+    setStorageManager(storageManager: any): void {
+        this.storageManager = storageManager;
     }
 
     /**
@@ -373,19 +381,40 @@ export class ErrorHandler {
      * Setup default recovery strategies
      */
     private setupDefaultRecoveryStrategies(): void {
-        // Storage error recovery
+        // Storage error recovery with IndexedDB fallback
         this.registerRecoveryStrategy('storage-retry', {
             canRecover: (error) => error.name.includes('Storage') || error.name.includes('IndexedDB'),
-            recover: async (/* error, context */) => {
+            recover: async (error: Error, context?: ErrorContext) => {
                 try {
-                    // Wait a bit and retry
+                    // For IndexedDB errors, try to reinitialize storage
+                    if (error.name.includes('IndexedDB') && this.storageManager) {
+                        console.log('Attempting IndexedDB recovery...');
+
+                        // Try to reinitialize storage manager
+                        await this.storageManager.initialize();
+
+                        await this.logInfo(
+                            'IndexedDB recovery successful - storage reinitialized',
+                            ErrorCategory.STORAGE,
+                            context
+                        );
+                        return true;
+                    }
+
+                    // For other storage errors, wait and retry
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     return true;
-                } catch {
+                } catch (recoveryError) {
+                    console.warn('Storage recovery failed:', recoveryError);
+                    await this.logWarning(
+                        'Storage recovery failed, falling back to localStorage-only mode',
+                        ErrorCategory.STORAGE,
+                        context
+                    );
                     return false;
                 }
             },
-            description: 'Retry storage operation after delay'
+            description: 'Retry storage operation with IndexedDB recovery'
         });
 
         // API error recovery

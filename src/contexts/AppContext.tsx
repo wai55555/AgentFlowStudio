@@ -17,7 +17,7 @@ import {
     OpenRouterClient
 } from '../services';
 import { useErrorHandler } from '../hooks/useErrorHandler';
-import { ErrorCategory } from '../services/errorHandler';
+import { ErrorCategory, ErrorHandler } from '../services/errorHandler';
 
 // Action types for state management
 type AppAction =
@@ -228,7 +228,20 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 // Create service instances if not already created
                 if (!serviceInstances) {
                     const storageManager = new UnifiedStorageManager();
-                    await storageManager.initialize();
+
+                    // Set storage manager for error handler recovery
+                    const errorHandler = ErrorHandler.getInstance();
+                    errorHandler.setStorageManager(storageManager);
+
+                    // Initialize storage with error handling
+                    try {
+                        await storageManager.initialize();
+                        await logInfo('Storage systems initialized successfully', ErrorCategory.STORAGE);
+                    } catch (storageError) {
+                        console.error('Failed to initialize storage systems:', storageError);
+                        console.warn('Storage initialization failed, using fallback mode');
+                        // Continue with fallback mode - don't throw
+                    }
 
                     const agentManager = new AgentManager(storageManager);
                     const taskQueue = new TaskQueueEngine(storageManager, agentManager);
