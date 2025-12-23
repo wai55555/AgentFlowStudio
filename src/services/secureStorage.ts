@@ -220,15 +220,28 @@ export class SecureStorage {
      */
     static async testCrypto(): Promise<boolean> {
         try {
+            console.log('SecureStorage.testCrypto: Starting test');
             const testData = 'test_encryption_' + Date.now();
             const testKey = 'crypto_test';
+            console.log('SecureStorage.testCrypto: Test data:', testData);
 
+            console.log('SecureStorage.testCrypto: Setting item');
             await this.setItem(testKey, testData);
-            const retrieved = await this.getItem(testKey);
-            this.removeItem(testKey);
+            console.log('SecureStorage.testCrypto: Item set successfully');
 
-            return retrieved === testData;
-        } catch {
+            console.log('SecureStorage.testCrypto: Getting item');
+            const retrieved = await this.getItem(testKey);
+            console.log('SecureStorage.testCrypto: Retrieved:', retrieved);
+
+            console.log('SecureStorage.testCrypto: Removing item');
+            this.removeItem(testKey);
+            console.log('SecureStorage.testCrypto: Item removed');
+
+            const result = retrieved === testData;
+            console.log('SecureStorage.testCrypto: Comparison result:', result);
+            return result;
+        } catch (error) {
+            console.error('SecureStorage.testCrypto: Error occurred:', error);
             return false;
         }
     }
@@ -317,7 +330,8 @@ export class SecureAPIKeyManager {
             return null;
         } catch (error) {
             // If decryption fails, the key might be corrupted
-            if (error instanceof SecureStorageError && error.code === 'DECRYPTION_FAILED') {
+            if (error instanceof SecureStorageError &&
+                (error.code === 'DECRYPTION_FAILED' || error.code === 'RETRIEVAL_FAILED')) {
                 // Remove corrupted key
                 this.removeAPIKey();
                 return null;

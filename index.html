@@ -8,7 +8,7 @@
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-eval';
+        script-src 'self' 'unsafe-eval' 'unsafe-inline';
         style-src 'self' 'unsafe-inline';
         img-src 'self' data: blob:;
         font-src 'self' data:;
@@ -17,13 +17,11 @@
         object-src 'none';
         base-uri 'self';
         form-action 'self';
-        frame-ancestors 'none';
         upgrade-insecure-requests;
     ">
 
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 
@@ -49,11 +47,11 @@
     <meta name="color-scheme" content="light dark">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="alternate icon" href="./favicon.ico" />
 
     <!-- Preload critical resources -->
-    <link rel="preload" href="/src/main.tsx" as="script" crossorigin>
+    <link rel="preload" href="./src/main.tsx" as="script" crossorigin>
 
     <!-- Prevent FOUC (Flash of Unstyled Content) -->
     <style>
@@ -167,15 +165,72 @@
         </div>
     </noscript>
 
+    <!-- CORS Error Warning for file:// protocol -->
+    <script>
+        // Show CORS warning if running from file:// protocol
+        if (location.protocol === 'file:') {
+            const corsWarning = document.createElement('div');
+            corsWarning.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(239, 68, 68, 0.95);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    padding: 2rem;
+                    box-sizing: border-box;
+                    z-index: 10000;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                ">
+                    <div>
+                        <h1 style="margin-bottom: 1rem;">⚠️ CORS Error Detected</h1>
+                        <p style="margin-bottom: 1rem; font-size: 1.1em;">
+                            This application cannot run from <code>file://</code> protocol due to browser security restrictions.
+                        </p>
+                        <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                            <h3>Solutions:</h3>
+                            <ol style="line-height: 1.6;">
+                                <li><strong>Development:</strong> Run <code>npm run dev</code> in terminal</li>
+                                <li><strong>Production Preview:</strong> Run <code>npm run build && npm run preview</code></li>
+                                <li><strong>VS Code:</strong> Use Live Server extension</li>
+                                <li><strong>Python:</strong> Run <code>python -m http.server 3000</code> in project folder</li>
+                                <li><strong>Node.js:</strong> Run <code>npx serve .</code> in project folder</li>
+                            </ol>
+                        </div>
+                        <p style="margin-top: 1rem; font-size: 0.9em; opacity: 0.8;">
+                            Then open <code>http://localhost:3000</code> (or the port shown) in your browser.
+                        </p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(corsWarning);
+        }
+    </script>
+
     <!-- Main application script -->
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- 
+        Note: This application requires a development server to run properly.
+        Direct file:// access will cause CORS errors.
+        
+        To run the application:
+        1. npm run dev (for development)
+        2. npm run build && npm run preview (for production preview)
+        3. Use a local HTTP server like Live Server extension in VS Code
+    -->
+    <script type="module" src="./src/main.tsx"></script>
 
     <!-- Service Worker registration (for future PWA support) -->
     <script>
         // Register service worker when available
-        if ('serviceWorker' in navigator) {
+        if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('SW registered: ', registration);
                     })
