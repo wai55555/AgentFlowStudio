@@ -5,10 +5,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Content Security Policy with nonce-based inline script security -->
+    <!-- Content Security Policy with hash-based inline script security -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-eval' 'nonce-cors-warning' 'nonce-service-worker';
+        script-src 'self' 'unsafe-eval' 'sha256-ezlC3IF0oOLxsktY5JM4CQZ3KKBSMNomRp8GHNVqiXk=' 'sha256-X+y72MybAdS5wSkMaY2Jb+gZXACaFVRs33tj57okPEg=';
         style-src 'self' 'unsafe-inline';
         img-src 'self' data: blob:;
         font-src 'self' data: https:;
@@ -165,7 +165,7 @@
     </noscript>
 
     <!-- CORS Error Warning for file:// protocol -->
-    <script nonce="cors-warning">
+    <script>
         // Show CORS warning if running from file:// protocol
         if (location.protocol === 'file:') {
             const corsWarning = document.createElement('div');
@@ -225,7 +225,7 @@
     <script type="module" src="./src/main.tsx"></script>
 
     <!-- Service Worker registration (for future PWA support) -->
-    <script nonce="service-worker">
+    <script>
         // Register service worker when available
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', () => {

@@ -131,6 +131,10 @@
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 1rem;
+    color: #2c3e50;
+    /* テキスト色を明示的に設定 */
+    background-color: #fff;
+    /* 背景色も明示的に設定 */
     transition: border-color 0.2s;
 }
 

@@ -293,6 +293,25 @@ export class SecureAPIKeyManager {
     private static readonly LEGACY_KEY = 'openrouter_api_key_plain';
 
     /**
+     * Get API key from environment variables (development only)
+     */
+    private static getEnvAPIKey(): string | null {
+        // Only in development mode and when running in browser with Vite
+        if (import.meta.env.DEV && import.meta.env.VITE_OPENROUTER_API_KEY) {
+            console.log('[SecureAPIKeyManager] Using API key from environment variables (development mode)');
+            return import.meta.env.VITE_OPENROUTER_API_KEY;
+        }
+        return null;
+    }
+
+    /**
+     * Check if development mode API key is available
+     */
+    static hasEnvAPIKey(): boolean {
+        return import.meta.env.DEV && !!import.meta.env.VITE_OPENROUTER_API_KEY;
+    }
+
+    /**
      * Store API key securely
      */
     static async setAPIKey(apiKey: string): Promise<void> {
@@ -310,8 +329,15 @@ export class SecureAPIKeyManager {
 
     /**
      * Retrieve API key securely
+     * Priority: 1. Environment variables (dev only), 2. Encrypted storage, 3. Legacy storage
      */
     static async getAPIKey(): Promise<string | null> {
+        // First, check environment variables in development mode
+        const envKey = this.getEnvAPIKey();
+        if (envKey) {
+            return envKey;
+        }
+
         try {
             // Try to get encrypted API key first
             const encryptedKey = await SecureStorage.getItem(this.API_KEY_STORAGE_KEY, { useDeviceKey: true });
@@ -349,9 +375,14 @@ export class SecureAPIKeyManager {
     }
 
     /**
-     * Check if API key exists
+     * Check if API key exists (including environment variables in dev mode)
      */
     static hasAPIKey(): boolean {
+        // Check environment variables first in development mode
+        if (this.hasEnvAPIKey()) {
+            return true;
+        }
+
         return SecureStorage.hasItem(this.API_KEY_STORAGE_KEY) ||
             localStorage.getItem(this.LEGACY_KEY) !== null;
     }
@@ -360,6 +391,11 @@ export class SecureAPIKeyManager {
      * Get masked API key for display
      */
     static async getAPIKeyPreview(): Promise<string> {
+        // Check if using environment variable
+        if (this.hasEnvAPIKey()) {
+            return '[環境変数から読み込み]';
+        }
+
         const apiKey = await this.getAPIKey();
         if (!apiKey) {
             return '';

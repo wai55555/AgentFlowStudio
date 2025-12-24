@@ -22,7 +22,7 @@ describe('OpenRouterClient', () => {
 
     beforeEach(() => {
         client = new OpenRouterClient({
-            apiKey: 'test-api-key-1234567890abcdef', // 32文字の有効なAPIキー
+            apiKey: 'test-api-key-1234567890abcdef', // 29文字の有効なAPIキー
             rateLimitRpm: 1000, // High rate limit to avoid delays in tests
             maxRetries: 0 // No retries to avoid delays in tests
         });

@@ -153,7 +153,7 @@ const localStorageMock = {
         if (key === 'constructor' || key === 'prototype' || key === '__proto__') {
             return storage.hasOwnProperty(key) ? storage[key] : null;
         }
-        return storage[key] || null;
+        return key in storage ? storage[key] : null;
     }),
     setItem: jest.fn((key: string, value: any) => {
         // Convert value to string like real localStorage API

@@ -32,6 +32,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     const [apiKey, setApiKey] = useState<string>('');
     const [showApiKey, setShowApiKey] = useState<boolean>(false);
     const [apiKeyStatus, setApiKeyStatus] = useState<'none' | 'valid' | 'invalid' | 'checking'>('none');
+    const [isUsingEnvKey, setIsUsingEnvKey] = useState<boolean>(false);
 
     const [exportData, setExportData] = useState<string>('');
     const [importData, setImportData] = useState<string>('');
@@ -54,10 +55,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 setStorageStats(stats);
 
                 // Load API key status from secure storage
+                const hasEnvKey = SecureAPIKeyManager.hasEnvAPIKey();
+                setIsUsingEnvKey(hasEnvKey);
+
                 const hasApiKey = SecureAPIKeyManager.hasAPIKey();
                 if (hasApiKey) {
                     const keyPreview = await SecureAPIKeyManager.getAPIKeyPreview();
-                    setApiKey(keyPreview); // Show masked version
+                    setApiKey(keyPreview); // Show masked version or env indicator
                     setApiKeyStatus('valid');
                 } else {
                     // Check for legacy plaintext key and migrate
@@ -332,8 +336,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                     type={showApiKey ? "text" : "password"}
                                     value={apiKey}
                                     onChange={(e) => handleApiKeyChange(e.target.value)}
-                                    placeholder="Enter your OpenRouter API key (sk-...)"
-                                    disabled={isLoading}
+                                    placeholder={isUsingEnvKey ? "環境変数から読み込み中..." : "Enter your OpenRouter API key (sk-...)"}
+                                    disabled={isLoading || isUsingEnvKey}
                                     className={`api-key-input ${apiKeyStatus}`}
                                 />
                                 <button
@@ -356,13 +360,19 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                 </button>
                             </div>
                             <div className="api-key-status">
-                                {apiKeyStatus === 'none' && (
+                                {isUsingEnvKey && (
+                                    <div className="env-key-notice">
+                                        <span className="status-env">🔧 開発環境: .envファイルからAPIキーを読み込み中</span>
+                                        <small>本番環境では手動でAPIキーを設定してください</small>
+                                    </div>
+                                )}
+                                {!isUsingEnvKey && apiKeyStatus === 'none' && (
                                     <span className="status-none">⚠️ No API key configured</span>
                                 )}
-                                {apiKeyStatus === 'valid' && (
+                                {!isUsingEnvKey && apiKeyStatus === 'valid' && (
                                     <span className="status-valid">✅ API key looks valid</span>
                                 )}
-                                {apiKeyStatus === 'invalid' && (
+                                {!isUsingEnvKey && apiKeyStatus === 'invalid' && (
                                     <span className="status-invalid">❌ API key appears invalid</span>
                                 )}
                                 {apiKeyStatus === 'checking' && (

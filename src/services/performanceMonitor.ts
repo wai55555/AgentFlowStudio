@@ -276,13 +276,13 @@ export class PerformanceMonitor {
             this.taskExecutionRecords.shift();
         }
 
-        // Update success/failure rates
-        const totalTasks = this.metrics.taskMetrics.totalExecuted;
+        // Update success/failure rates using taskExecutionRecords length as denominator
+        const recordsCount = this.taskExecutionRecords.length;
         const successCount = this.taskExecutionRecords.filter(record => record.success).length;
         const failureCount = this.taskExecutionRecords.filter(record => !record.success).length;
 
-        this.metrics.taskMetrics.successRate = totalTasks > 0 ? successCount / totalTasks : 0;
-        this.metrics.taskMetrics.failureRate = totalTasks > 0 ? failureCount / totalTasks : 0;
+        this.metrics.taskMetrics.successRate = recordsCount > 0 ? successCount / recordsCount : 0;
+        this.metrics.taskMetrics.failureRate = recordsCount > 0 ? failureCount / recordsCount : 0;
 
         // Update average execution time using recent records
         const recentRecords = this.getTimeWindowTasks(60 * 1000); // Last minute

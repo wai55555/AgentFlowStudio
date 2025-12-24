@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Workflow } from '../types/workflow';
 import WorkflowCanvas from './WorkflowCanvas';
 import WorkflowList from './WorkflowList';
+import WorkflowTemplateModal from './WorkflowTemplateModal';
+import { useApp } from '../contexts/AppContext';
 import './WorkflowEditor.css';
 
 interface WorkflowEditorProps {
@@ -27,8 +29,51 @@ const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
 }) => {
     const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(activeWorkflow || null);
     const [viewMode, setViewMode] = useState<'list' | 'editor'>('list');
-
     const [isCreating, setIsCreating] = useState(false);
+    const [showTemplateModal, setShowTemplateModal] = useState(false);
+    const { setWorkflows } = useApp();
+
+    console.log('[WorkflowEditor] Component rendered, showTemplateModal:', showTemplateModal);
+
+    const handleCreateFromTemplate = async (workflow: Workflow) => {
+        console.log('[WorkflowEditor] handleCreateFromTemplate called with workflow:', workflow);
+
+        try {
+            // ワークフローが有効かチェック
+            if (!workflow || !workflow.id || !workflow.name) {
+                throw new Error('無効なワークフローデータです');
+            }
+
+            console.log('[WorkflowEditor] Creating workflow via setWorkflows');
+
+            // 既存のワークフローIDと重複していないかチェック
+            const existingWorkflow = workflows.find(w => w.id === workflow.id);
+            if (existingWorkflow) {
+                console.warn('[WorkflowEditor] Workflow ID already exists, generating new ID');
+                workflow.id = `workflow-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            }
+
+            console.log('[WorkflowEditor] Adding workflow to list, current count:', workflows.length);
+
+            // ワークフローリストを更新（AppContextのsetWorkflowsを使用）
+            const updatedWorkflows = [...workflows, workflow];
+            await setWorkflows(updatedWorkflows);
+
+            console.log('[WorkflowEditor] Workflow list updated, new count:', updatedWorkflows.length);
+
+            // 状態を更新
+            setSelectedWorkflow(workflow.id);
+            setViewMode('editor');
+            onSetActiveWorkflow(workflow.id);
+
+            console.log('[WorkflowEditor] State updated - selectedWorkflow:', workflow.id, 'viewMode: editor');
+            console.log('[WorkflowEditor] Template workflow created successfully:', workflow.name);
+
+        } catch (error) {
+            console.error('[WorkflowEditor] Error in handleCreateFromTemplate:', error);
+            alert(`ワークフローの作成に失敗しました: ${(error as Error).message}`);
+        }
+    };
 
     const handleCreateWorkflow = async () => {
         try {
@@ -99,8 +144,18 @@ const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
         };
     };
 
-    const currentWorkflow = selectedWorkflow ? workflows.find(w => w.id === selectedWorkflow) : null;
+    const currentWorkflow = selectedWorkflow ?
+        workflows.find(w => w.id === selectedWorkflow) : null;
     const statusCounts = getStatusCounts();
+
+    // デバッグログ
+    console.log('[WorkflowEditor] Render state:', {
+        viewMode,
+        selectedWorkflow,
+        workflowsCount: workflows.length,
+        currentWorkflow: !!currentWorkflow,
+        showTemplateModal
+    });
 
     return (
         <div className="workflow-editor">
@@ -145,6 +200,15 @@ const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
                         ✏️ Editor
                     </button>
                     <button
+                        className="template-btn"
+                        onClick={() => {
+                            console.log('[WorkflowEditor] Template button clicked');
+                            setShowTemplateModal(true);
+                        }}
+                    >
+                        📋 テンプレート
+                    </button>
+                    <button
                         className="create-workflow-btn"
                         onClick={handleCreateWorkflow}
                         disabled={isCreating}
@@ -156,37 +220,62 @@ const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
             </div>
 
             <div className="workflow-content">
-                {viewMode === 'list' ? (
-                    <WorkflowList
-                        workflows={workflows}
-                        onSelect={handleSelectWorkflow}
-                        onUpdate={handleUpdateWorkflow}
-                        onDelete={handleDeleteWorkflow}
-                        onDuplicate={handleDuplicateWorkflow}
-                        selectedWorkflow={selectedWorkflow}
-                    />
-                ) : currentWorkflow ? (
-                    <WorkflowCanvas
-                        workflow={currentWorkflow}
-                        onUpdate={handleUpdateWorkflow}
-                        onBack={() => setViewMode('list')}
-                    />
-                ) : (
-                    <div className="no-workflow-selected">
-                        <div className="empty-state">
-                            <div className="empty-icon">🔄</div>
-                            <h3>No workflow selected</h3>
-                            <p>Select a workflow from the list or create a new one to get started.</p>
-                            <button
-                                className="back-to-list-btn"
-                                onClick={() => setViewMode('list')}
-                            >
-                                Back to List
-                            </button>
-                        </div>
-                    </div>
-                )}
+                {(() => {
+                    console.log('[WorkflowEditor] Rendering decision:', {
+                        viewMode,
+                        isListMode: viewMode === 'list',
+                        hasCurrentWorkflow: !!currentWorkflow,
+                        selectedWorkflow,
+                        workflowsLength: workflows.length
+                    });
+
+                    if (viewMode === 'list') {
+                        return (
+                            <WorkflowList
+                                workflows={workflows}
+                                onSelect={handleSelectWorkflow}
+                                onUpdate={handleUpdateWorkflow}
+                                onDelete={handleDeleteWorkflow}
+                                onDuplicate={handleDuplicateWorkflow}
+                                selectedWorkflow={selectedWorkflow}
+                            />
+                        );
+                    } else if (currentWorkflow) {
+                        console.log('[WorkflowEditor] Rendering WorkflowCanvas for:', currentWorkflow.name);
+                        return (
+                            <WorkflowCanvas
+                                workflow={currentWorkflow}
+                                onUpdate={handleUpdateWorkflow}
+                                onBack={() => setViewMode('list')}
+                            />
+                        );
+                    } else {
+                        console.log('[WorkflowEditor] Rendering empty state - no workflow found');
+                        return (
+                            <div className="no-workflow-selected">
+                                <div className="empty-state">
+                                    <div className="empty-icon">🔄</div>
+                                    <h3>No workflow selected</h3>
+                                    <p>Select a workflow from the list or create a new one to get started.</p>
+                                    <p><small>Debug: viewMode={viewMode}, selectedWorkflow={selectedWorkflow}, workflows.length={workflows.length}</small></p>
+                                    <button
+                                        className="back-to-list-btn"
+                                        onClick={() => setViewMode('list')}
+                                    >
+                                        Back to List
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    }
+                })()}
             </div>
+
+            <WorkflowTemplateModal
+                isOpen={showTemplateModal}
+                onClose={() => setShowTemplateModal(false)}
+                onCreateFromTemplate={handleCreateFromTemplate}
+            />
         </div>
     );
 };

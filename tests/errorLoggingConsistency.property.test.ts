@@ -207,15 +207,15 @@ describe('Property 7: Error handling consistency', () => {
                 validDateArbitrary,
                 async (edgeDate, normalDate) => {
                     try {
-                        // Valid case should not throw
+                        // Test all three possible relationships between dates
                         if (edgeDate <= normalDate) {
+                            // Valid case: startDate <= endDate should not throw
                             (manager as any).validateDateRange(edgeDate, normalDate);
-                        }
-
-                        // Invalid case should throw if startDate > endDate
-                        if (normalDate > edgeDate) {
+                            return true;
+                        } else if (edgeDate > normalDate) {
+                            // Invalid case: startDate > endDate should throw
                             try {
-                                (manager as any).validateDateRange(normalDate, edgeDate);
+                                (manager as any).validateDateRange(edgeDate, normalDate);
                                 return false; // Should have thrown
                             } catch (error) {
                                 const isCorrectError = error instanceof IndexedDBError &&
@@ -227,7 +227,7 @@ describe('Property 7: Error handling consistency', () => {
 
                         return true;
                     } catch (error) {
-                        // If the valid case threw an error, check it's appropriate
+                        // If the valid case threw an error, this is incorrect
                         if (edgeDate <= normalDate) {
                             return false; // Valid case should not throw
                         }

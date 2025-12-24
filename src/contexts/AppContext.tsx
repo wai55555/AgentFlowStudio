@@ -191,6 +191,7 @@ interface AppContextType {
     updateWorkflow: (workflow: Workflow) => Promise<void>;
     deleteWorkflow: (workflowId: string) => Promise<void>;
     executeWorkflow: (workflowId: string) => Promise<void>;
+    setWorkflows: (workflows: Workflow[]) => Promise<void>;
 
     // UI operations
     setViewMode: (mode: AppState['ui']['viewMode']) => void;
@@ -516,6 +517,30 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         dispatch({ type: 'SET_ACTIVE_WORKFLOW', payload: workflowId });
     };
 
+    const setWorkflows = async (workflows: Workflow[]): Promise<void> => {
+        if (!serviceInstances) throw new Error('Services not initialized');
+
+        try {
+            console.log('[AppContext] setWorkflows called with', workflows.length, 'workflows');
+
+            // Save each workflow to storage
+            for (const workflow of workflows) {
+                console.log('[AppContext] Saving workflow:', workflow.id, workflow.name);
+                await serviceInstances.storageManager.saveWorkflow(workflow);
+            }
+
+            // Update state
+            dispatch({ type: 'SET_WORKFLOWS', payload: workflows });
+            console.log('[AppContext] Workflows state updated and persisted');
+        } catch (error) {
+            await handleError(
+                error instanceof Error ? error : new Error('Failed to set workflows'),
+                ErrorCategory.WORKFLOW
+            );
+            throw error;
+        }
+    };
+
     // Configuration operations
     const exportConfiguration = async (): Promise<string> => {
         if (!serviceInstances) throw new Error('Services not initialized');
@@ -569,6 +594,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         updateWorkflow,
         deleteWorkflow,
         executeWorkflow,
+        setWorkflows,
 
         // UI operations
         setViewMode,

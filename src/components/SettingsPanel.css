@@ -461,3 +461,32 @@
         margin: 1rem;
     }
 }
+
+/* 環境変数APIキーの表示スタイル */
+.env-key-notice {
+    background-color: #e8f4fd;
+    border: 1px solid #bee5eb;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.status-env {
+    color: #0c5460;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.env-key-notice small {
+    color: #6c757d;
+    font-size: 0.85rem;
+    display: block;
+}
+
+/* 環境変数使用時の入力フィールドスタイル */
+.api-key-input:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}

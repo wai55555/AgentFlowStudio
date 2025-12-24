@@ -256,6 +256,8 @@ select {
     font-family: inherit;
     font-size: var(--font-size-base);
     background-color: var(--background-secondary);
+    color: var(--text-primary);
+    /* 明示的にテキスト色を設定 */
 }
 
 input:focus,

@@ -10,6 +10,7 @@ import './Dashboard.css';
 const Dashboard: React.FC = () => {
     const {
         state,
+        services,
         setViewMode,
         updateAgent,
         createAgent,
@@ -82,9 +83,19 @@ const Dashboard: React.FC = () => {
         // The context manages the state updates
     };
 
-    const handleWorkflowUpdate = async (/* workflows: typeof state.workflows */) => {
-        // This is handled through individual workflow operations now
-        // The context manages the state updates
+    const handleWorkflowUpdate = async (workflows: typeof state.workflows) => {
+        console.log('[Dashboard] handleWorkflowUpdate called with workflows count:', workflows.length);
+        try {
+            // AppContextのdispatchを使用してワークフローを更新
+            // SET_WORKFLOWSアクションを呼ぶ
+            if (services && services.storageManager) {
+                // ワークフローをストレージに保存
+                await services.storageManager.saveWorkflows(workflows);
+                console.log('[Dashboard] Workflows saved successfully');
+            }
+        } catch (error) {
+            console.error('[Dashboard] Error updating workflows:', error);
+        }
     };
 
     return (

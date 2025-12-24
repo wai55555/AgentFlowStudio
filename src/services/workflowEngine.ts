@@ -37,6 +37,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     private taskQueue: TaskQueueEngine;
     // Note: Agent manager reference can be added here when needed for agent-workflow integration
     private executionContexts: Map<string, ExecutionContext> = new Map();
+    private isInitialized: boolean = false;
 
     constructor(
         storageManager: UnifiedStorageManager,
@@ -46,7 +47,23 @@ export class WorkflowEngine implements IWorkflowEngine {
         this.storageManager = storageManager;
         this.taskQueue = taskQueue;
         // this.__agentManager = _agentManager; // Uncomment when agent integration is implemented
-        this.loadWorkflowsFromStorage();
+
+        // Start async initialization without blocking
+        this.initializeAsync();
+    }
+
+    /**
+     * Async initialization of workflows from storage
+     */
+    private async initializeAsync(): Promise<void> {
+        try {
+            await this.loadWorkflowsFromStorage();
+            this.isInitialized = true;
+            console.log('[WorkflowEngine] Initialization complete, loaded', this.workflows.size, 'workflows');
+        } catch (error) {
+            console.error('[WorkflowEngine] Failed to initialize:', error);
+            this.isInitialized = true; // Mark as initialized even on error to prevent blocking
+        }
     }
 
     /**
@@ -285,6 +302,8 @@ export class WorkflowEngine implements IWorkflowEngine {
      * Gets all workflows
      */
     getWorkflows(): Workflow[] {
+        // Return current workflows (may be empty if still initializing)
+        // The async initialization will populate this as it completes
         return Array.from(this.workflows.values());
     }
 
