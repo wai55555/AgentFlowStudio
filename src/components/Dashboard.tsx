@@ -87,14 +87,8 @@ const Dashboard: React.FC = () => {
     const handleWorkflowUpdate = async (workflows: typeof state.workflows) => {
         console.log('[Dashboard] handleWorkflowUpdate called with workflows count:', workflows.length);
         try {
-            // AppContextのdispatchを使用してワークフローを更新
-            // SET_WORKFLOWSアクションを呼ぶ
-            if (services && services.storageManager) {
-                // ワークフローをストレージに保存
-                await services.storageManager.saveWorkflows(workflows);
-                console.log('[Dashboard] Workflows saved successfully');
-            }
-            // React状態を更新
+            // setWorkflows already handles storage persistence internally
+            // No need for redundant storageManager.saveWorkflows() call
             await setWorkflows(workflows);
             console.log('[Dashboard] React state updated with new workflows');
         } catch (error) {

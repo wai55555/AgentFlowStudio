@@ -21,7 +21,7 @@ export { PerformanceMonitor as PerformanceMonitorService, PerformanceMonitorErro
 export { StatisticsService, StatisticsServiceError } from './statisticsService';
 export { CryptoService, CryptoServiceError } from './cryptoService';
 export { SecureStorage, SecureAPIKeyManager, SecureStorageError } from './secureStorage';
-export { InputValidator, ValidationError } from './inputValidation';
+export { InputValidator } from './inputValidation';
 
 export type { ExecutionLog, TaskResult, DateFilterOptions, LogFilterResult } from './indexedDB';
 export type { SerializationOptions } from './serialization';

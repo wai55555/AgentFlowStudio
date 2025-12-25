@@ -298,14 +298,15 @@ export class SecureAPIKeyManager {
     private static getEnvAPIKey(): string | null {
         // Only in development mode and when running in browser with Vite
         try {
-            // Check if import.meta is available (Vite environment)
-            const meta = (globalThis as any).import?.meta;
-            if (meta?.env?.DEV && meta?.env?.VITE_OPENROUTER_API_KEY) {
+            // Check if we're in a Vite environment by checking for import.meta.env
+            // This works because Vite injects import.meta.env at build time
+            const meta = (import as any).meta;
+            if (meta && meta.env && meta.env.DEV && meta.env.VITE_OPENROUTER_API_KEY) {
                 console.log('[SecureAPIKeyManager] Using API key from environment variables (development mode)');
                 return meta.env.VITE_OPENROUTER_API_KEY;
             }
         } catch (error) {
-            // import.meta not available (Jest environment)
+            // import.meta not available (Jest environment or non-Vite build)
             console.log('[SecureAPIKeyManager] import.meta not available, skipping environment variable check');
         }
         return null;
