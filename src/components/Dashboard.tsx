@@ -22,7 +22,8 @@ const Dashboard: React.FC = () => {
         updateWorkflow,
         deleteWorkflow,
         executeWorkflow,
-        setActiveWorkflow
+        setActiveWorkflow,
+        setWorkflows
     } = useApp();
 
     // Keyboard shortcuts
@@ -93,6 +94,9 @@ const Dashboard: React.FC = () => {
                 await services.storageManager.saveWorkflows(workflows);
                 console.log('[Dashboard] Workflows saved successfully');
             }
+            // React状態を更新
+            await setWorkflows(workflows);
+            console.log('[Dashboard] React state updated with new workflows');
         } catch (error) {
             console.error('[Dashboard] Error updating workflows:', error);
         }

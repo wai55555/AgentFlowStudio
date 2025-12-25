@@ -10,6 +10,9 @@ export { OpenRouterClient, OpenRouterError, RateLimitError } from './openRouterC
 export { AgentManager, AgentManagerError } from './agentManager';
 export { TaskQueueEngine, TaskQueueError } from './taskQueue';
 export { WorkflowEngine, WorkflowEngineError } from './workflowEngine';
+export { WorkflowExecutor, WorkflowExecutorError } from './workflowExecutor';
+export { NodeConfigEditor, NodeConfigEditorError } from './nodeConfigEditor';
+export { AgentExecutor, AgentExecutorError } from './agentExecutor';
 export { WorkerPool, WorkerPoolError } from './workerPool';
 export { WebWorkerIntegration, WebWorkerIntegrationError } from './webWorkerIntegration';
 export { ConfigurationManager, ConfigurationManagerError } from './configurationManager';
@@ -39,3 +42,5 @@ export type {
 export type { EncryptedData } from './cryptoService';
 export type { SecureStorageOptions } from './secureStorage';
 export type { ValidationRule, ValidationSchema, ValidationResult } from './inputValidation';
+export type { ExecutionContext, ExecutionResult, ConfigField, ConfigSchema, ValidationError } from '../types/workflow';
+export type { AgentResult, AgentCapability } from './agentExecutor';

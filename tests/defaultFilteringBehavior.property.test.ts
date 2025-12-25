@@ -68,7 +68,8 @@ describe('Property 6: Default filtering behavior', () => {
             fc.asyncProperty(
                 uniqueLogsArbitrary(0, 30),
                 async (logs) => {
-                    // Test with empty filter object
+                    // Test with empty filter object - both startDate and endDate are undefined
+                    // This simulates an empty DateFilterOptions object
                     const filtered = (manager as any).filterLogsByDateRange(logs, undefined, undefined);
 
                     // Property: Empty filter should behave the same as no filter

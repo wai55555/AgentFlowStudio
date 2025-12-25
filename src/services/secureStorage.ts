@@ -297,9 +297,16 @@ export class SecureAPIKeyManager {
      */
     private static getEnvAPIKey(): string | null {
         // Only in development mode and when running in browser with Vite
-        if (import.meta.env.DEV && import.meta.env.VITE_OPENROUTER_API_KEY) {
-            console.log('[SecureAPIKeyManager] Using API key from environment variables (development mode)');
-            return import.meta.env.VITE_OPENROUTER_API_KEY;
+        try {
+            // Check if import.meta is available (Vite environment)
+            const meta = (globalThis as any).import?.meta;
+            if (meta?.env?.DEV && meta?.env?.VITE_OPENROUTER_API_KEY) {
+                console.log('[SecureAPIKeyManager] Using API key from environment variables (development mode)');
+                return meta.env.VITE_OPENROUTER_API_KEY;
+            }
+        } catch (error) {
+            // import.meta not available (Jest environment)
+            console.log('[SecureAPIKeyManager] import.meta not available, skipping environment variable check');
         }
         return null;
     }
@@ -308,7 +315,12 @@ export class SecureAPIKeyManager {
      * Check if development mode API key is available
      */
     static hasEnvAPIKey(): boolean {
-        return import.meta.env.DEV && !!import.meta.env.VITE_OPENROUTER_API_KEY;
+        try {
+            const meta = (globalThis as any).import?.meta;
+            return meta?.env?.DEV && !!meta?.env?.VITE_OPENROUTER_API_KEY;
+        } catch (error) {
+            return false;
+        }
     }
 
     /**
