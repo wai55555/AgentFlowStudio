@@ -1,12 +1,14 @@
 /**
  * OpenRouter API Client
  * Handles communication with OpenRouter API for AI model access
+ * Now with secure API key management using Web Crypto API
  */
 
 import type { APIClient, RequestConfig, APIResponse, UsageStats } from '../types/api';
+import { SecureAPIKeyManager, SecureStorageError } from './secureStorage';
 
 export interface OpenRouterConfig {
-    apiKey: string;
+    apiKey?: string; // Made optional since we'll load from secure storage
     baseUrl?: string;
     defaultModel?: string;
     maxRetries?: number;
@@ -41,12 +43,12 @@ interface RequestMetrics {
 }
 
 export class OpenRouterClient implements APIClient {
-    private config: Required<OpenRouterConfig>;
+    private config: Required<Omit<OpenRouterConfig, 'apiKey'>>;
     private metrics: RequestMetrics;
     private requestQueue: Array<{ timestamp: number; resolve: () => void }> = [];
     private rateLimitWindow: number = 60000; // 1 minute in milliseconds
 
-    constructor(config: OpenRouterConfig) {
+    constructor(config: OpenRouterConfig = {}) {
         this.config = {
             baseUrl: 'https://openrouter.ai/api/v1',
             defaultModel: 'xiaomi/mimo-v2-flash:free',
@@ -65,12 +67,23 @@ export class OpenRouterClient implements APIClient {
 
         // Load existing metrics from localStorage
         this.loadMetrics();
+
+        // If API key provided in config, store it securely
+        if (config.apiKey) {
+            this.updateApiKey(config.apiKey);
+        }
     }
 
     /**
      * Send a request to OpenRouter API with retry logic and rate limiting
      */
     async sendRequest(prompt: string, config: RequestConfig): Promise<APIResponse> {
+        // Ensure we have an API key
+        const apiKey = await this.getApiKey();
+        if (!apiKey) {
+            throw new OpenRouterError('No API key configured. Please set your OpenRouter API key.', 401);
+        }
+
         await this.enforceRateLimit();
 
         const startTime = Date.now();
@@ -78,7 +91,7 @@ export class OpenRouterClient implements APIClient {
 
         for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
             try {
-                const response = await this.makeRequest(prompt, config);
+                const response = await this.makeRequest(prompt, config, apiKey);
 
                 // Update metrics on success
                 const responseTime = Date.now() - startTime;
@@ -108,12 +121,52 @@ export class OpenRouterClient implements APIClient {
     }
 
     /**
+     * Update the API key configuration (stores securely)
+     */
+    async updateApiKey(apiKey: string): Promise<void> {
+        try {
+            await SecureAPIKeyManager.setAPIKey(apiKey);
+        } catch (error) {
+            if (error instanceof SecureStorageError) {
+                throw new OpenRouterError(`Failed to store API key securely: ${error.message}`, 500);
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Get API key from secure storage
+     */
+    private async getApiKey(): Promise<string | null> {
+        try {
+            return await SecureAPIKeyManager.getAPIKey();
+        } catch (error) {
+            console.error('Failed to retrieve API key:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Get current API key status (masked for security)
+     */
+    async getApiKeyStatus(): Promise<{ hasKey: boolean; keyPreview: string }> {
+        const hasKey = SecureAPIKeyManager.hasAPIKey();
+        const keyPreview = hasKey ? await SecureAPIKeyManager.getAPIKeyPreview() : '';
+        return { hasKey, keyPreview };
+    }
+
+    /**
      * Check if the configured model is available
      */
     async checkModelAvailability(): Promise<boolean> {
         try {
+            const apiKey = await this.getApiKey();
+            if (!apiKey) {
+                return false;
+            }
+
             const response = await fetch(`${this.config.baseUrl}/models`, {
-                headers: this.getHeaders(),
+                headers: this.getHeaders(apiKey),
                 signal: AbortSignal.timeout(5000)
             });
 
@@ -147,7 +200,7 @@ export class OpenRouterClient implements APIClient {
     /**
      * Make the actual HTTP request to OpenRouter API
      */
-    private async makeRequest(prompt: string, config: RequestConfig): Promise<APIResponse> {
+    private async makeRequest(prompt: string, config: RequestConfig, apiKey: string): Promise<APIResponse> {
         const requestBody = {
             model: config.model || this.config.defaultModel,
             messages: [
@@ -167,7 +220,7 @@ export class OpenRouterClient implements APIClient {
         try {
             const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
                 method: 'POST',
-                headers: this.getHeaders(),
+                headers: this.getHeaders(apiKey),
                 body: JSON.stringify(requestBody),
                 signal: controller.signal
             });
@@ -194,9 +247,9 @@ export class OpenRouterClient implements APIClient {
     /**
      * Get HTTP headers for API requests
      */
-    private getHeaders(): Record<string, string> {
+    private getHeaders(apiKey: string): Record<string, string> {
         return {
-            'Authorization': `Bearer ${this.config.apiKey}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': window.location.origin,
             'X-Title': 'AI Agent Orchestration Platform'

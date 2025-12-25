@@ -15,6 +15,11 @@ webstore_images/
 venv/
 .venv/
 
+# Development/Working Files (should not be committed)
+instruction.txt
+todo.txt
+trae-agent/
+
 # Dependencies
 **/node_modules
 .pnp

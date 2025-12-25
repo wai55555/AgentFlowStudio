@@ -69,14 +69,14 @@ const WorkflowList: React.FC<WorkflowListProps> = ({
         setEditName('');
     };
 
-    const formatDate = (date: Date) => {
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(date);
-    };
+    // const formatDate = (date: Date) => {
+    //     return new Intl.DateTimeFormat('en-US', {
+    //         month: 'short',
+    //         day: 'numeric',
+    //         hour: '2-digit',
+    //         minute: '2-digit'
+    //     }).format(date);
+    // };
 
     const getNodeTypeCount = (workflow: Workflow) => {
         const counts = {

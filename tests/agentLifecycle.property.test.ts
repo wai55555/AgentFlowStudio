@@ -117,8 +117,8 @@ describe('Property 3: Agent lifecycle management', () => {
                             return true; // Skip this iteration if agent doesn't exist
                         }
 
-                        const wasAgentBusy = agentExists.status === 'busy';
-                        const hadRunningTask = agentsWithTasks.some(at => at.agent.id === agentToDelete.id);
+                        // const wasAgentBusy = agentExists.status === 'busy';
+                        // const hadRunningTask = agentsWithTasks.some(at => at.agent.id === agentToDelete.id);
 
                         // Delete the agent
                         await agentManager.deleteAgent(agentToDelete.id);

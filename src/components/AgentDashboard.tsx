@@ -15,7 +15,7 @@ interface AgentDashboardProps {
 
 const AgentDashboard: React.FC<AgentDashboardProps> = ({
     agents,
-    onAgentsUpdate,
+    // onAgentsUpdate,
     selectedAgent,
     onCreateAgent,
     onUpdateAgent,

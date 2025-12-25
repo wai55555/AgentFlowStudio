@@ -161,6 +161,8 @@
     border-radius: var(--radius-md);
     font-size: var(--font-size-base);
     background-color: var(--background-secondary);
+    color: var(--text-primary);
+    /* テキスト色を明示的に設定 */
     transition: all var(--transition-base);
 }
 

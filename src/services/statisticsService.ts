@@ -7,7 +7,7 @@ import { PerformanceMonitor, PerformanceMetrics, UsageStatistics } from './perfo
 import { AgentManager } from './agentManager';
 import { TaskQueueEngine } from './taskQueue';
 import { WorkflowEngine } from './workflowEngine';
-import { Agent } from '../types/agent';
+// import { Agent } from '../types/agent';
 import { Task } from '../types/task';
 import { Workflow } from '../types/workflow';
 
@@ -89,7 +89,7 @@ export interface DetailedStatistics {
         taskDistribution: {
             byType: Array<{ type: string; count: number }>;
             byStatus: Array<{ status: string; count: number }>;
-            byPriority: Array<{ priority: number; count: number }>;
+            byPriority: Array<{ priority: string; count: number }>;
         };
         executionTimes: {
             fastest: number;
@@ -122,6 +122,13 @@ export interface DetailedStatistics {
         hourlyActivity: Array<{ hour: number; activity: number }>;
         weeklyTrends: Array<{ week: string; tasks: number; success: number; errors: number }>;
     };
+}
+
+export interface TypeSafeGroupBy {
+    <T, K extends keyof T>(
+        array: T[],
+        property: K
+    ): Array<{ [P in K]: string } & { count: number }>;
 }
 
 export class StatisticsServiceError extends Error {
@@ -179,15 +186,15 @@ export class StatisticsService {
         // For now, we'll poll the services for their current state
 
         // Monitor performance metrics
-        this.performanceMonitor.subscribe((metrics: PerformanceMetrics) => {
-            this.updateFromPerformanceMetrics(metrics);
+        this.performanceMonitor.subscribe((/* metrics: PerformanceMetrics */) => {
+            this.updateFromPerformanceMetrics();
         });
     }
 
     /**
      * Update statistics from performance metrics
      */
-    private updateFromPerformanceMetrics(metrics: PerformanceMetrics): void {
+    private updateFromPerformanceMetrics(/* metrics: PerformanceMetrics */): void {
         // Update agent metrics
         this.performanceMonitor.updateAgentMetrics(
             this.agentManager.getAllAgents().length,
@@ -245,9 +252,17 @@ export class StatisticsService {
                     apiCallsPerMinute: metrics.systemMetrics.apiCallsPerMinute,
                     networkLatency: 0 // Would be calculated from API call metrics
                 },
-                trends: this.calculateTrends(currentStats, this.previousStats),
+                trends: {
+                    tasksTrend: 'stable',
+                    performanceTrend: 'stable',
+                    errorTrend: 'stable',
+                    utilizationTrend: 'stable'
+                }, // Will be calculated after currentStats is defined
                 lastUpdated: new Date()
             };
+
+            // Calculate trends after currentStats is defined
+            currentStats.trends = this.calculateTrends(currentStats, this.previousStats);
 
             this.previousStats = currentStats;
             this.notifyListeners(currentStats);
@@ -370,8 +385,8 @@ export class StatisticsService {
     /**
      * Record task execution for performance monitoring
      */
-    recordTaskExecution(taskId: string, executionTime: number, success: boolean): void {
-        this.performanceMonitor.recordTaskExecution(taskId, executionTime, success);
+    recordTaskExecution(executionTime: number, success: boolean, agentId?: string, taskType?: string): void {
+        this.performanceMonitor.recordTaskExecution(executionTime, success, agentId, taskType);
     }
 
     /**
@@ -384,8 +399,8 @@ export class StatisticsService {
     /**
      * Record workflow execution
      */
-    recordWorkflowExecution(workflowId: string, executionTime: number, success: boolean, nodeTypes: string[]): void {
-        this.performanceMonitor.recordWorkflowExecution(workflowId, executionTime, success, nodeTypes);
+    recordWorkflowExecution(/* workflowId: string, */ executionTime: number, success: boolean, nodeTypes: string[]): void {
+        this.performanceMonitor.recordWorkflowExecution(executionTime, success, nodeTypes);
     }
 
     /**
@@ -517,19 +532,22 @@ export class StatisticsService {
     }
 
     /**
-     * Group array items by a property
+     * Group array items by a property with type-safe string conversion
+     * Implements TypeSafeGroupBy interface
      */
-    private groupBy<T>(array: T[], property: keyof T): Array<{ [key: string]: any; count: number }> {
+    public groupBy<T, K extends keyof T>(array: T[], property: K): Array<{ [P in K]: string } & { count: number }> {
+        // Use Object.create(null) to avoid prototype pollution issues
         const groups = array.reduce((acc, item) => {
             const key = String(item[property]);
-            acc[key] = (acc[key] || 0) + 1;
+            // Use hasOwnProperty to safely check for existing keys
+            acc[key] = (Object.prototype.hasOwnProperty.call(acc, key) ? acc[key] : 0) + 1;
             return acc;
-        }, {} as Record<string, number>);
+        }, Object.create(null) as Record<string, number>);
 
         return Object.entries(groups).map(([key, count]) => ({
             [property]: key,
             count
-        }));
+        } as { [P in K]: string } & { count: number }));
     }
 
     /**

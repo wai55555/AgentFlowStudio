@@ -6,7 +6,7 @@
 import { WorkerPool, WorkerPoolConfig } from './workerPool';
 import { TaskQueueEngine } from './taskQueue';
 import { AgentManager } from './agentManager';
-import { Task, TaskStatus } from '../types/task';
+import { Task, /* TaskStatus */ } from '../types/task';
 import { Agent } from '../types/agent';
 
 export interface WebWorkerIntegrationConfig {
@@ -184,7 +184,7 @@ export class WebWorkerIntegration {
 
             // This is a simplified fallback - in a real implementation,
             // you would have a main thread task executor
-            const result = await this.simulateMainThreadExecution(task, agent);
+            const result = await this.simulateMainThreadExecution(task);
 
             await this.taskQueue.completeTask(task.id, result);
             this.agentManager.updateAgentStatus(agent.id, 'idle');
@@ -202,7 +202,7 @@ export class WebWorkerIntegration {
     /**
      * Simulate main thread execution (placeholder implementation)
      */
-    private async simulateMainThreadExecution(task: Task, agent: Agent): Promise<string> {
+    private async simulateMainThreadExecution(task: Task, /* agent: Agent */): Promise<string> {
         // This is a placeholder - in a real implementation, you would
         // have the actual OpenRouter API client logic here
         return new Promise((resolve, reject) => {

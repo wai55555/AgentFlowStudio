@@ -5,7 +5,7 @@
  */
 
 import * as fc from 'fast-check';
-import type { Agent, Task, Workflow, SystemSettings } from '../src/types';
+// import type { Agent, Task, Workflow, SystemSettings } from '../src/types';
 
 describe('Property 13: Browser-native operation', () => {
     beforeEach(() => {

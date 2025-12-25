@@ -3,6 +3,15 @@
  * Collects and tracks performance metrics, usage statistics, and system resources
  */
 
+export interface TaskExecutionRecord {
+    id: string;
+    timestamp: Date;
+    duration: number;
+    success: boolean;
+    agentId?: string;
+    taskType?: string;
+}
+
 export interface PerformanceMetrics {
     // Task execution metrics
     taskMetrics: {
@@ -135,18 +144,18 @@ export class PerformanceMonitorError extends Error {
 }
 
 export class PerformanceMonitor {
-    private metrics: PerformanceMetrics;
-    private statistics: UsageStatistics;
+    private metrics: PerformanceMetrics = {} as PerformanceMetrics;
+    private statistics: UsageStatistics = {} as UsageStatistics;
     private startTime: Date;
     private updateInterval: number | null = null;
     private listeners: Array<(metrics: PerformanceMetrics) => void> = [];
-    private taskExecutionTimes: number[] = [];
+    private taskExecutionRecords: TaskExecutionRecord[] = [];
     private apiCallTimes: Array<{ timestamp: Date; duration: number; success: boolean }> = [];
-    private sessionStart: Date;
+    // Note: Session start tracking can be added here when needed for session-based metrics
 
     constructor() {
         this.startTime = new Date();
-        this.sessionStart = new Date();
+        // this.__sessionStart = new Date(); // Uncomment when session tracking is implemented
         this.initializeMetrics();
         this.initializeStatistics();
         this.startRealTimeMonitoring();
@@ -249,28 +258,46 @@ export class PerformanceMonitor {
     /**
      * Record task execution metrics
      */
-    recordTaskExecution(taskId: string, executionTime: number, success: boolean): void {
-        this.taskExecutionTimes.push(executionTime);
+    recordTaskExecution(executionTime: number, success: boolean, agentId?: string, taskType?: string): void {
+        const taskRecord: TaskExecutionRecord = {
+            id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            timestamp: new Date(),
+            duration: executionTime,
+            success,
+            agentId,
+            taskType
+        };
+
+        this.taskExecutionRecords.push(taskRecord);
         this.metrics.taskMetrics.totalExecuted++;
 
-        // Keep only last 100 execution times for performance
-        if (this.taskExecutionTimes.length > 100) {
-            this.taskExecutionTimes.shift();
+        // Keep only last 1000 execution records for performance
+        if (this.taskExecutionRecords.length > 1000) {
+            this.taskExecutionRecords.shift();
         }
 
-        // Update success/failure rates
-        const totalTasks = this.metrics.taskMetrics.totalExecuted;
-        if (success) {
-            this.metrics.taskMetrics.successRate =
-                ((this.metrics.taskMetrics.successRate * (totalTasks - 1)) + 1) / totalTasks;
-        } else {
-            this.metrics.taskMetrics.failureRate =
-                ((this.metrics.taskMetrics.failureRate * (totalTasks - 1)) + 1) / totalTasks;
+        // Update success/failure rates using taskExecutionRecords length as denominator
+        const recordsCount = this.taskExecutionRecords.length;
+        const successCount = this.taskExecutionRecords.filter(record => record.success).length;
+        const failureCount = this.taskExecutionRecords.filter(record => !record.success).length;
+
+        this.metrics.taskMetrics.successRate = recordsCount > 0 ? successCount / recordsCount : 0;
+        this.metrics.taskMetrics.failureRate = recordsCount > 0 ? failureCount / recordsCount : 0;
+
+        // Update average execution time using recent records
+        const recentRecords = this.getTimeWindowTasks(60 * 1000); // Last minute
+        if (recentRecords.length > 0) {
+            this.metrics.taskMetrics.averageExecutionTime =
+                recentRecords.reduce((sum, record) => sum + record.duration, 0) / recentRecords.length;
         }
 
-        // Update average execution time
-        this.metrics.taskMetrics.averageExecutionTime =
-            this.taskExecutionTimes.reduce((sum, time) => sum + time, 0) / this.taskExecutionTimes.length;
+        // Update tasks per minute immediately
+        this.metrics.taskMetrics.tasksPerMinute = this.calculateTasksPerMinute();
+
+        // Update peak tasks per minute
+        if (this.metrics.taskMetrics.tasksPerMinute > this.metrics.taskMetrics.peakTasksPerMinute) {
+            this.metrics.taskMetrics.peakTasksPerMinute = this.metrics.taskMetrics.tasksPerMinute;
+        }
 
         // Update statistics
         this.statistics.totalStats.totalTasksExecuted++;
@@ -321,7 +348,7 @@ export class PerformanceMonitor {
     /**
      * Record workflow execution metrics
      */
-    recordWorkflowExecution(workflowId: string, executionTime: number, success: boolean, nodeTypes: string[]): void {
+    recordWorkflowExecution(/* workflowId: string, */ executionTime: number, success: boolean, nodeTypes: string[]): void {
         this.statistics.totalStats.totalWorkflowsExecuted++;
 
         // Update workflow success rate
@@ -406,19 +433,38 @@ export class PerformanceMonitor {
     }
 
     /**
+     * Get tasks within a specific time window
+     */
+    private getTimeWindowTasks(windowMs: number): TaskExecutionRecord[] {
+        const now = new Date();
+        const windowStart = new Date(now.getTime() - windowMs);
+        return this.taskExecutionRecords.filter(record => record.timestamp >= windowStart);
+    }
+
+    /**
+     * Calculate tasks per minute based on actual time window
+     */
+    private calculateTasksPerMinute(): number {
+        const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+        const tasksInLastMinute = this.taskExecutionRecords.filter(
+            record => record.timestamp >= oneMinuteAgo
+        );
+        return tasksInLastMinute.length;
+    }
+
+    /**
      * Update real-time metrics
      */
     private updateRealTimeMetrics(): void {
         const now = new Date();
 
-        // Calculate tasks per minute based on recent activity
-        const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
-        const recentTasks = this.taskExecutionTimes.length; // Simplified
-        this.metrics.taskMetrics.tasksPerMinute = recentTasks;
+        // Calculate tasks per minute based on actual time window (last 60 seconds)
+        const tasksPerMinute = this.calculateTasksPerMinute();
+        this.metrics.taskMetrics.tasksPerMinute = tasksPerMinute;
 
         // Update peak tasks per minute
-        if (recentTasks > this.metrics.taskMetrics.peakTasksPerMinute) {
-            this.metrics.taskMetrics.peakTasksPerMinute = recentTasks;
+        if (tasksPerMinute > this.metrics.taskMetrics.peakTasksPerMinute) {
+            this.metrics.taskMetrics.peakTasksPerMinute = tasksPerMinute;
         }
 
         // Update uptime
@@ -674,7 +720,7 @@ export class PerformanceMonitor {
      */
     resetStatistics(): void {
         this.initializeStatistics();
-        this.taskExecutionTimes = [];
+        this.taskExecutionRecords = [];
         this.apiCallTimes = [];
         localStorage.removeItem('performance_statistics');
     }

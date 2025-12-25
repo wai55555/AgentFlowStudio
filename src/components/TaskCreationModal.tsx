@@ -10,7 +10,7 @@ interface TaskCreationModalProps {
     isCreating?: boolean;
 }
 
-const TaskCreationModal: React.FC<TaskCreationModalProps> = ({ onClose, onCreate, agents, isCreating = false }) => {
+const TaskCreationModal: React.FC<TaskCreationModalProps> = ({ onClose, onCreate, agents, /* isCreating = false */ }) => {
     const [formData, setFormData] = useState({
         type: 'simple' as TaskType,
         priority: 5,

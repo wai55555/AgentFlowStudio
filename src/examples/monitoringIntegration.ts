@@ -75,8 +75,9 @@ export class MonitoringIntegrationExample {
                 const success = !error;
 
                 // Record metrics
-                this.statisticsService.recordTaskExecution(taskId, executionTime, success);
-                this.performanceMonitor.recordTaskExecution(taskId, executionTime, success);
+                const agentId = 'workflow_agent'; // Default agent ID for workflow tasks
+                this.statisticsService.recordTaskExecution(executionTime, success, agentId, 'workflow_task');
+                this.performanceMonitor.recordTaskExecution(executionTime, success, agentId, 'workflow_task');
             }
 
             return originalCompleteTask(taskId, result, error);
@@ -139,7 +140,6 @@ export class MonitoringIntegrationExample {
                 const nodeTypes = workflow?.nodes.map(n => n.type) || [];
 
                 this.statisticsService.recordWorkflowExecution(
-                    workflowId,
                     executionTime,
                     true,
                     nodeTypes
@@ -149,7 +149,6 @@ export class MonitoringIntegrationExample {
                 const nodeTypes = workflow?.nodes.map(n => n.type) || [];
 
                 this.statisticsService.recordWorkflowExecution(
-                    workflowId,
                     executionTime,
                     false,
                     nodeTypes
@@ -167,10 +166,10 @@ export class MonitoringIntegrationExample {
         // For demonstration purposes, we'll show how to record API metrics
 
         // Example of recording an API call
-        const recordAPICall = (duration: number, success: boolean) => {
-            this.statisticsService.recordAPICall(duration, success);
-            this.performanceMonitor.recordAPICall(duration, success);
-        };
+        // const recordAPICall = (duration: number, success: boolean) => {
+        //     this.statisticsService.recordAPICall(duration, success);
+        //     this.performanceMonitor.recordAPICall(duration, success);
+        // };
 
         // In a real implementation, this would be called from the API client
         // recordAPICall(1500, true); // 1.5 second successful call

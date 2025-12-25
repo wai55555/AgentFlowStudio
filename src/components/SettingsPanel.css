@@ -114,6 +114,98 @@
     font-size: 0.9rem;
 }
 
+/* API Key Configuration Styles */
+.api-key-input-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.api-key-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+    font-family: 'Courier New', monospace;
+}
+
+.api-key-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.api-key-input.valid {
+    border-color: #27ae60;
+}
+
+.api-key-input.invalid {
+    border-color: #e74c3c;
+}
+
+.api-key-input.checking {
+    border-color: #f39c12;
+}
+
+.toggle-visibility-btn,
+.test-api-key-btn {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-visibility-btn:hover,
+.test-api-key-btn:hover:not(:disabled) {
+    background-color: #e9ecef;
+}
+
+.test-api-key-btn:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.api-key-status {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-none {
+    color: #f39c12;
+}
+
+.status-valid {
+    color: #27ae60;
+}
+
+.status-invalid {
+    color: #e74c3c;
+}
+
+.status-checking {
+    color: #3498db;
+}
+
+.setting-help a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.setting-help a:hover {
+    text-decoration: underline;
+}
+
 .setting-item input,
 .setting-item select {
     width: 100%;
@@ -368,4 +460,33 @@
         width: 95%;
         margin: 1rem;
     }
+}
+
+/* 環境変数APIキーの表示スタイル */
+.env-key-notice {
+    background-color: #e8f4fd;
+    border: 1px solid #bee5eb;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.status-env {
+    color: #0c5460;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.env-key-notice small {
+    color: #6c757d;
+    font-size: 0.85rem;
+    display: block;
+}
+
+/* 環境変数使用時の入力フィールドスタイル */
+.api-key-input:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
 }

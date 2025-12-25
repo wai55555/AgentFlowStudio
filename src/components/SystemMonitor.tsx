@@ -24,7 +24,7 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({
     const [realTimeStats, setRealTimeStats] = useState<RealTimeStats | null>(null);
     const [detailedStats, setDetailedStats] = useState<DetailedStatistics | null>(null);
     const [showDetailedView, setShowDetailedView] = useState(false);
-    const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
+    // const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         if (!statisticsService) return;
@@ -42,7 +42,7 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({
             setDetailedStats(statisticsService.getDetailedStatistics());
         }, 30000);
 
-        setRefreshInterval(interval);
+        // setRefreshInterval(interval);
 
         return () => {
             unsubscribe();
@@ -417,7 +417,7 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({
                                     <div className="agent-info">
                                         <span className="agent-name">{agent.name}</span>
                                         <span className="agent-role">
-                                            {agent.role}
+                                            {'role' in agent ? agent.role : 'Unknown'}
                                             {detailedStats && 'successRate' in agent && (
                                                 <span className="success-rate">
                                                     • {agent.successRate.toFixed(1)}% success
@@ -427,12 +427,16 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({
                                     </div>
                                     <div className="agent-metrics">
                                         <span className="metric">
-                                            {agent.stats.tasksCompleted} tasks
+                                            {'stats' in agent ? agent.stats.tasksCompleted : agent.tasksCompleted} tasks
                                         </span>
                                         <span className="metric">
-                                            {agent.stats.averageResponseTime < 1000
-                                                ? `${agent.stats.averageResponseTime}ms`
-                                                : `${(agent.stats.averageResponseTime / 1000).toFixed(1)}s`
+                                            {'stats' in agent
+                                                ? (agent.stats.averageResponseTime < 1000
+                                                    ? `${agent.stats.averageResponseTime}ms`
+                                                    : `${(agent.stats.averageResponseTime / 1000).toFixed(1)}s`)
+                                                : (agent.averageResponseTime < 1000
+                                                    ? `${agent.averageResponseTime}ms`
+                                                    : `${(agent.averageResponseTime / 1000).toFixed(1)}s`)
                                             }
                                         </span>
                                     </div>
@@ -458,10 +462,10 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({
                                             {task.status}
                                         </span>
                                         <span className="task-prompt">
-                                            {task.prompt.substring(0, 60)}
-                                            {task.prompt.length > 60 ? '...' : ''}
+                                            {'prompt' in task ? task.prompt.substring(0, 60) : 'No description'}
+                                            {'prompt' in task && task.prompt.length > 60 ? '...' : ''}
                                         </span>
-                                        {task.completedAt && task.startedAt && (
+                                        {'completedAt' in task && 'startedAt' in task && task.completedAt && task.startedAt && (
                                             <span className="task-duration">
                                                 Duration: {((task.completedAt.getTime() - task.startedAt.getTime()) / 1000).toFixed(2)}s
                                             </span>

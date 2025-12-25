@@ -5,7 +5,7 @@
 import { TaskQueueEngine, TaskQueueError } from '../src/services/taskQueue';
 import { UnifiedStorageManager } from '../src/services/storageManager';
 import { AgentManager } from '../src/services/agentManager';
-import { Task, TaskStatus } from '../src/types/task';
+import { Task, /* TaskStatus */ } from '../src/types/task';
 
 // Mock storage manager
 const mockStorageManager = {
@@ -75,10 +75,14 @@ describe('TaskQueueEngine', () => {
 
         it('should throw error for task without ID', () => {
             const task = {
+                id: '', // Empty ID should cause error
                 type: 'simple',
                 priority: 1,
                 prompt: 'Test prompt',
-                dependencies: []
+                dependencies: [],
+                status: 'pending',
+                createdAt: new Date(),
+                retryCount: 0
             } as Task;
 
             expect(() => taskQueue.enqueue(task)).toThrow(TaskQueueError);

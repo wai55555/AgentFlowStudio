@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { SystemSettings } from '../types/storage';
 import { useApp } from '../contexts/AppContext';
+import { SecureAPIKeyManager, SecureStorageError } from '../services/secureStorage';
 import './SettingsPanel.css';
+
+interface APIKeyTestResult {
+    isValid: boolean;
+    testedKey: string; // マスクされたキー
+    timestamp: Date;
+    errorMessage?: string;
+}
 
 interface SettingsPanelProps {
     isOpen?: boolean;
@@ -19,6 +27,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         autoSaveInterval: 60000,
         theme: 'light'
     });
+
+    // API Key management state
+    const [apiKey, setApiKey] = useState<string>('');
+    const [showApiKey, setShowApiKey] = useState<boolean>(false);
+    const [apiKeyStatus, setApiKeyStatus] = useState<'none' | 'valid' | 'invalid' | 'checking'>('none');
+    const [isUsingEnvKey, setIsUsingEnvKey] = useState<boolean>(false);
 
     const [exportData, setExportData] = useState<string>('');
     const [importData, setImportData] = useState<string>('');
@@ -39,6 +53,32 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 ]);
                 setSettings(loadedSettings);
                 setStorageStats(stats);
+
+                // Load API key status from secure storage
+                const hasEnvKey = SecureAPIKeyManager.hasEnvAPIKey();
+                setIsUsingEnvKey(hasEnvKey);
+
+                const hasApiKey = SecureAPIKeyManager.hasAPIKey();
+                if (hasApiKey) {
+                    const keyPreview = await SecureAPIKeyManager.getAPIKeyPreview();
+                    setApiKey(keyPreview); // Show masked version or env indicator
+                    setApiKeyStatus('valid');
+                } else {
+                    // Check for legacy plaintext key and migrate
+                    const legacyKey = localStorage.getItem('openrouter_api_key');
+                    if (legacyKey) {
+                        try {
+                            await SecureAPIKeyManager.setAPIKey(legacyKey);
+                            localStorage.removeItem('openrouter_api_key');
+                            setApiKey(await SecureAPIKeyManager.getAPIKeyPreview());
+                            setApiKeyStatus('valid');
+                        } catch (error) {
+                            console.error('Failed to migrate API key:', error);
+                            setApiKey(legacyKey);
+                            setApiKeyStatus('invalid');
+                        }
+                    }
+                }
             } catch (error) {
                 console.error('Failed to load settings:', error);
             }
@@ -57,10 +97,121 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         try {
             setIsLoading(true);
             await services.storageManager.saveSettings(settings);
+
+            // Save API key securely if provided
+            if (apiKey.trim() && !apiKey.includes('*')) { // Don't save masked keys
+                try {
+                    await SecureAPIKeyManager.setAPIKey(apiKey.trim());
+                    // Update OpenRouter client with new key
+                    await services.openRouterClient.updateApiKey(apiKey.trim());
+                    setApiKeyStatus('valid');
+                    // Update display to show masked version
+                    const keyPreview = await SecureAPIKeyManager.getAPIKeyPreview();
+                    setApiKey(keyPreview);
+                } catch (error) {
+                    console.error('Failed to save API key securely:', error);
+                    setApiKeyStatus('invalid');
+                    if (error instanceof SecureStorageError) {
+                        alert(`Failed to save API key: ${error.message}`);
+                        return;
+                    }
+                }
+            } else if (!apiKey.trim()) {
+                SecureAPIKeyManager.removeAPIKey();
+                setApiKeyStatus('none');
+            }
+
             alert('Settings saved successfully!');
         } catch (error) {
             console.error('Failed to save settings:', error);
             alert('Failed to save settings. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleApiKeyChange = (value: string) => {
+        setApiKey(value);
+        if (value.trim() && !value.includes('*')) { // Don't validate masked keys
+            setApiKeyStatus('checking');
+            // Simple validation - check if it looks like an API key
+            if (value.length >= 20) {
+                setApiKeyStatus('valid');
+            } else {
+                setApiKeyStatus('invalid');
+            }
+        } else if (!value.trim()) {
+            setApiKeyStatus('none');
+        }
+    };
+
+    const handleTestApiKey = async (): Promise<APIKeyTestResult> => {
+        if (!services) {
+            const result: APIKeyTestResult = {
+                isValid: false,
+                testedKey: '',
+                timestamp: new Date(),
+                errorMessage: 'Services not available'
+            };
+            return result;
+        }
+
+        try {
+            setIsLoading(true);
+            setApiKeyStatus('checking');
+
+            // Validate that we have a key to test
+            const keyToTest = apiKey.trim();
+            if (!keyToTest || keyToTest.includes('*')) {
+                const result: APIKeyTestResult = {
+                    isValid: false,
+                    testedKey: keyToTest.includes('*') ? keyToTest : '',
+                    timestamp: new Date(),
+                    errorMessage: 'Please enter a valid API key first.'
+                };
+                setApiKeyStatus('none');
+                alert(result.errorMessage);
+                return result;
+            }
+
+            // Create a masked version of the key for the result
+            const maskedKey = keyToTest.length > 8
+                ? `${keyToTest.substring(0, 4)}${'*'.repeat(keyToTest.length - 8)}${keyToTest.substring(keyToTest.length - 4)}`
+                : '*'.repeat(keyToTest.length);
+
+            // Update the client configuration with the new key before testing
+            await services.openRouterClient.updateApiKey(keyToTest);
+
+            // Test the API key by checking model availability
+            const isValid = await services.openRouterClient.checkModelAvailability();
+
+            const result: APIKeyTestResult = {
+                isValid,
+                testedKey: maskedKey,
+                timestamp: new Date(),
+                errorMessage: isValid ? undefined : 'API key appears to be invalid or there was a connection issue.'
+            };
+
+            setApiKeyStatus(isValid ? 'valid' : 'invalid');
+
+            if (isValid) {
+                alert('API key is valid!');
+            } else {
+                alert(result.errorMessage);
+            }
+
+            return result;
+        } catch (error) {
+            console.error('Failed to test API key:', error);
+            const result: APIKeyTestResult = {
+                isValid: false,
+                testedKey: apiKey.includes('*') ? apiKey : '*'.repeat(Math.min(apiKey.length, 20)),
+                timestamp: new Date(),
+                errorMessage: `Failed to test API key: ${error instanceof Error ? error.message : 'Unknown error'}`
+            };
+            setApiKeyStatus('invalid');
+            alert(result.errorMessage);
+            return result;
         } finally {
             setIsLoading(false);
         }
@@ -174,6 +325,67 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </div>
 
                 <div className="settings-content">
+                    {/* API Configuration */}
+                    <div className="settings-section">
+                        <h4>API Configuration</h4>
+
+                        <div className="setting-item">
+                            <label>OpenRouter API Key</label>
+                            <div className="api-key-input-group">
+                                <input
+                                    type={showApiKey ? "text" : "password"}
+                                    value={apiKey}
+                                    onChange={(e) => handleApiKeyChange(e.target.value)}
+                                    placeholder={isUsingEnvKey ? "環境変数から読み込み中..." : "Enter your OpenRouter API key (sk-...)"}
+                                    disabled={isLoading || isUsingEnvKey}
+                                    className={`api-key-input ${apiKeyStatus}`}
+                                />
+                                <button
+                                    type="button"
+                                    className="toggle-visibility-btn"
+                                    onClick={() => setShowApiKey(!showApiKey)}
+                                    title={showApiKey ? "Hide API key" : "Show API key"}
+                                    disabled={isLoading}
+                                >
+                                    {showApiKey ? "🙈" : "👁️"}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="test-api-key-btn"
+                                    onClick={() => handleTestApiKey()}
+                                    disabled={!apiKey.trim() || isLoading}
+                                    title="Test API key"
+                                >
+                                    {apiKeyStatus === 'checking' ? "⏳" : "🧪"}
+                                </button>
+                            </div>
+                            <div className="api-key-status">
+                                {isUsingEnvKey && (
+                                    <div className="env-key-notice">
+                                        <span className="status-env">🔧 開発環境: .envファイルからAPIキーを読み込み中</span>
+                                        <small>本番環境では手動でAPIキーを設定してください</small>
+                                    </div>
+                                )}
+                                {!isUsingEnvKey && apiKeyStatus === 'none' && (
+                                    <span className="status-none">⚠️ No API key configured</span>
+                                )}
+                                {!isUsingEnvKey && apiKeyStatus === 'valid' && (
+                                    <span className="status-valid">✅ API key looks valid</span>
+                                )}
+                                {!isUsingEnvKey && apiKeyStatus === 'invalid' && (
+                                    <span className="status-invalid">❌ API key appears invalid</span>
+                                )}
+                                {apiKeyStatus === 'checking' && (
+                                    <span className="status-checking">⏳ Checking API key...</span>
+                                )}
+                            </div>
+                            <span className="setting-help">
+                                Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">OpenRouter</a>.
+                                Your key is stored locally in your browser only.
+                            </span>
+                        </div>
+                    </div>
+
                     {/* General Settings */}
                     <div className="settings-section">
                         <h4>General</h4>

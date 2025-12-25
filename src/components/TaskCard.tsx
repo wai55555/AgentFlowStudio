@@ -14,7 +14,7 @@ interface TaskCardProps {
 const TaskCard: React.FC<TaskCardProps> = ({
     task,
     agents,
-    onUpdate,
+    // onUpdate,
     onDelete,
     onRetry
 }) => {

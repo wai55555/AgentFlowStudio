@@ -17,7 +17,7 @@ import {
     OpenRouterClient
 } from '../services';
 import { useErrorHandler } from '../hooks/useErrorHandler';
-import { ErrorCategory } from '../services/errorHandler';
+import { ErrorCategory, ErrorHandler } from '../services/errorHandler';
 
 // Action types for state management
 type AppAction =
@@ -158,20 +158,23 @@ function appReducer(state: AppState, action: AppAction): AppState {
 }
 
 // Service instances (singleton pattern)
-let serviceInstances: {
+let serviceInstances: ServiceInstances | null = null;
+
+// Service instances type
+interface ServiceInstances {
     storageManager: UnifiedStorageManager;
     agentManager: AgentManager;
     taskQueue: TaskQueueEngine;
     workflowEngine: WorkflowEngine;
     configurationManager: ConfigurationManager;
     openRouterClient: OpenRouterClient;
-} | null = null;
+}
 
 // Context interface
 interface AppContextType {
     state: AppState;
     isLoading: boolean;
-    services: typeof serviceInstances | null;
+    services: ServiceInstances | null;
 
     // Agent operations
     createAgent: (config: Parameters<AgentManager['createAgent']>[0]) => Promise<Agent>;
@@ -188,6 +191,7 @@ interface AppContextType {
     updateWorkflow: (workflow: Workflow) => Promise<void>;
     deleteWorkflow: (workflowId: string) => Promise<void>;
     executeWorkflow: (workflowId: string) => Promise<void>;
+    setWorkflows: (workflows: Workflow[]) => Promise<void>;
 
     // UI operations
     setViewMode: (mode: AppState['ui']['viewMode']) => void;
@@ -225,15 +229,28 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 // Create service instances if not already created
                 if (!serviceInstances) {
                     const storageManager = new UnifiedStorageManager();
-                    await storageManager.initialize();
+
+                    // Set storage manager for error handler recovery
+                    const errorHandler = ErrorHandler.getInstance();
+                    errorHandler.setStorageManager(storageManager);
+
+                    // Initialize storage with error handling
+                    try {
+                        await storageManager.initialize();
+                        await logInfo('Storage systems initialized successfully', ErrorCategory.STORAGE);
+                    } catch (storageError) {
+                        console.error('Failed to initialize storage systems:', storageError);
+                        console.warn('Storage initialization failed, using fallback mode');
+                        // Continue with fallback mode - don't throw
+                    }
 
                     const agentManager = new AgentManager(storageManager);
                     const taskQueue = new TaskQueueEngine(storageManager, agentManager);
                     const workflowEngine = new WorkflowEngine(storageManager, taskQueue, agentManager);
                     const configurationManager = new ConfigurationManager(storageManager);
                     const openRouterClient = new OpenRouterClient({
-                        apiKey: '', // Will be configured later
-                        baseURL: 'https://openrouter.ai/api/v1'
+                        apiKey: localStorage.getItem('openrouter_api_key') || '', // Read from localStorage
+                        baseUrl: 'https://openrouter.ai/api/v1'
                     });
 
                     serviceInstances = {
@@ -500,6 +517,30 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         dispatch({ type: 'SET_ACTIVE_WORKFLOW', payload: workflowId });
     };
 
+    const setWorkflows = async (workflows: Workflow[]): Promise<void> => {
+        if (!serviceInstances) throw new Error('Services not initialized');
+
+        try {
+            console.log('[AppContext] setWorkflows called with', workflows.length, 'workflows');
+
+            // Save each workflow to storage
+            for (const workflow of workflows) {
+                console.log('[AppContext] Saving workflow:', workflow.id, workflow.name);
+                await serviceInstances.storageManager.saveWorkflow(workflow);
+            }
+
+            // Update state
+            dispatch({ type: 'SET_WORKFLOWS', payload: workflows });
+            console.log('[AppContext] Workflows state updated and persisted');
+        } catch (error) {
+            await handleError(
+                error instanceof Error ? error : new Error('Failed to set workflows'),
+                ErrorCategory.WORKFLOW
+            );
+            throw error;
+        }
+    };
+
     // Configuration operations
     const exportConfiguration = async (): Promise<string> => {
         if (!serviceInstances) throw new Error('Services not initialized');
@@ -553,6 +594,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         updateWorkflow,
         deleteWorkflow,
         executeWorkflow,
+        setWorkflows,
 
         // UI operations
         setViewMode,

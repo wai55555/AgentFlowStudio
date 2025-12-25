@@ -112,6 +112,24 @@
     background-color: #229954;
 }
 
+.template-btn {
+    background-color: #9b59b6;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.template-btn:hover {
+    background-color: #8e44ad;
+}
+
 .create-workflow-btn span {
     font-size: 1.2rem;
     font-weight: bold;
