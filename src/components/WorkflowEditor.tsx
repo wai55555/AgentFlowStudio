@@ -257,7 +257,6 @@ const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
                                     <div className="empty-icon">🔄</div>
                                     <h3>No workflow selected</h3>
                                     <p>Select a workflow from the list or create a new one to get started.</p>
-                                    <p><small>Debug: viewMode={viewMode}, selectedWorkflow={selectedWorkflow}, workflows.length={workflows.length}</small></p>
                                     <button
                                         className="back-to-list-btn"
                                         onClick={() => setViewMode('list')}
